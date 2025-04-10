@@ -7,6 +7,28 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="assets/css/main.css" />
   <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+  <style>
+    .typing {
+      display: inline;
+      font-family: monospace;
+      font-size: 1.2em;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 0.15em solid white;
+      animation: typing 3s steps(40, end) infinite, blink-caret 0.75s step-end infinite;
+    }
+
+    @keyframes typing {
+      0% { width: 0; }
+      50% { width: 100%; }
+      100% { width: 0; }
+    }
+
+    @keyframes blink-caret {
+      from, to { border-color: transparent; }
+      50% { border-color: white; }
+    }
+  </style>
 </head>
 <body class="is-preload">
 
@@ -61,45 +83,8 @@
     <!-- Projects -->
     <article id="projects">
       <h2 class="major">Projects</h2>
-      <div class="projects-grid">
-
-        <div class="project-card">
-          <div class="card-inner">
-            <div class="card-front">
-              <h3>Portfolio Website</h3>
-            </div>
-            <div class="card-back">
-              <p>Built using HTML, CSS, and GitHub Pages. Fully responsive and dark-themed.</p>
-              <a href="https://github.com/ClumsyNoodlester" target="_blank">View on GitHub</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="project-card">
-          <div class="card-inner">
-            <div class="card-front">
-              <h3>SysAdmin Lab</h3>
-            </div>
-            <div class="card-back">
-              <p>Set up Linux servers, scripted automated setups, and security hardening.</p>
-              <a href="#">Details Coming Soon</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="project-card">
-          <div class="card-inner">
-            <div class="card-front">
-              <h3>Cybersecurity Labs</h3>
-            </div>
-            <div class="card-back">
-              <p>Penetration testing labs with Kali Linux and Metasploit framework.</p>
-              <a href="#">Details Coming Soon</a>
-            </div>
-          </div>
-        </div>
-
-      </div>
+      <span class="image main"><img src="images/pic04.jpg" alt="Projects" /></span>
+      <p><span class="typing">Currently building my portfolio...</span></p>
     </article>
 
     <!-- About -->
@@ -111,6 +96,7 @@
         <li><strong>Languages:</strong> Portuguese (Native), English (Fluent), Russian (Basic)</li>
         <li><strong>Technical Skills:</strong> Python, Java, Kotlin, C</li>
         <li><strong>Certifications:</strong> Introduction to Information Security (Expected March 2025)</li>
+        <li><strong>CV:</strong> <a href="assets/DaniilKachkovskyy_CV.pdf" target="_blank" class="button primary icon solid fa-download">Download CV</a></li>
       </ul>
     </article>
 
