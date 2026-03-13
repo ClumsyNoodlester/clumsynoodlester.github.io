@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Github, 
@@ -506,16 +506,21 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
     "SYSTEM READY."
   ];
 
-  useEffect(() => {
-    // Generate a random subset of logs for this session
+  const selectedLogs = useMemo(() => {
     const shuffled = [...logPool.slice(0, -1)].sort(() => 0.5 - Math.random());
-    const selectedLogs = [...shuffled.slice(0, 6), logPool[logPool.length - 1]];
+    return [...shuffled.slice(0, 6), logPool[logPool.length - 1]];
+  }, []);
 
+  useEffect(() => {
     const startTimeout = setTimeout(() => {
       let currentLog = 0;
       const logInterval = setInterval(() => {
         if (currentLog < selectedLogs.length) {
-          setLogs(prev => [...prev, `> ${selectedLogs[currentLog]}`]);
+          const logToAdd = `> ${selectedLogs[currentLog]}`;
+          setLogs(prev => {
+            if (prev.includes(logToAdd)) return prev;
+            return [...prev, logToAdd];
+          });
           currentLog++;
         } else {
           clearInterval(logInterval);
@@ -533,13 +538,16 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
         });
       }, 30);
 
-      return () => {
-        clearInterval(logInterval);
-        clearInterval(progressInterval);
-      };
+      // Store intervals in a way that they can be cleared
+      (window as any)._logInterval = logInterval;
+      (window as any)._progressInterval = progressInterval;
     }, 50);
 
-    return () => clearTimeout(startTimeout);
+    return () => {
+      clearTimeout(startTimeout);
+      clearInterval((window as any)._logInterval);
+      clearInterval((window as any)._progressInterval);
+    };
   }, []);
 
   return (
@@ -956,8 +964,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-300 font-sans selection:bg-orange-500/30 selection:text-orange-200 overflow-x-hidden no-print">
-      {/* Language Switcher */}
+    <>
+      <div className="min-h-screen bg-[#050505] text-zinc-300 font-sans selection:bg-orange-500/30 selection:text-orange-200 overflow-x-hidden no-print">
+        {/* Language Switcher */}
       <div className={`fixed right-4 z-[70] flex gap-2 bg-zinc-900/50 backdrop-blur-md p-1 rounded-lg border border-white/10 transition-all ${user ? 'top-16' : 'top-4'}`}>
         <button 
           onClick={() => setLang('en')}
@@ -2069,20 +2078,12 @@ export default function App() {
         </div>
       </div>
 
+      </div>
+
       {/* Hidden CV for printing - using a more robust method for iframe environments */}
-      <div 
-        className="fixed pointer-events-none overflow-hidden print-only" 
-        style={{ 
-          left: '-10000px', 
-          top: '-10000px', 
-          width: '210mm', 
-          height: '297mm', 
-          opacity: 0,
-          zIndex: -1
-        }}
-      >
+      <div className="cv-print-container print-only">
         <CV ref={cvRef} config={siteConfig} lang={lang} />
       </div>
-    </div>
+    </>
   );
 }
