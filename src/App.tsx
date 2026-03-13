@@ -60,6 +60,14 @@ interface Project {
   createdAt: any;
 }
 
+interface Message {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  createdAt: any;
+}
+
 interface Language {
   name: string;
   level: string;
@@ -456,6 +464,8 @@ export default function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [lang, setLang] = useState<'en' | 'pt'>('en');
   const [editLang, setEditLang] = useState<'en' | 'pt'>('en');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isViewingMessages, setIsViewingMessages] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '', honeypot: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -523,12 +533,27 @@ export default function App() {
       }
     });
 
+    let unsubscribeMessages: () => void = () => {};
+    if (user?.email === "dan.kachkyy@gmail.com") {
+      const mq = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+      unsubscribeMessages = onSnapshot(mq, (snapshot) => {
+        const msgs = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Message[];
+        setMessages(msgs);
+      }, (error) => {
+        console.error("Messages fetch error:", error);
+      });
+    }
+
     return () => {
       unsubscribeAuth();
       unsubscribeProjects();
       unsubscribeConfig();
+      unsubscribeMessages();
     };
-  }, []);
+  }, [user]);
 
   const handleLogin = async () => {
     try {
@@ -595,6 +620,16 @@ export default function App() {
       setIsEditingConfig(false);
     } catch (error) {
       console.error("Failed to update config", error);
+    }
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+    if (!isAdmin) return;
+    if (!window.confirm("Delete this message?")) return;
+    try {
+      await deleteDoc(doc(db, 'messages', id));
+    } catch (error) {
+      console.error("Failed to delete message", error);
     }
   };
 
@@ -681,13 +716,22 @@ export default function App() {
           </div>
           <div className="flex gap-4">
             {isAdmin && (
-              <button 
-                onClick={() => setIsEditingConfig(true)}
-                className="text-[10px] font-mono uppercase tracking-widest text-orange-500 hover:text-orange-400 transition-colors flex items-center gap-2"
-              >
-                <Edit3 size={12} />
-                Edit Site Content
-              </button>
+              <>
+                <button 
+                  onClick={() => setIsViewingMessages(true)}
+                  className="text-[10px] font-mono uppercase tracking-widest text-orange-500 hover:text-orange-400 transition-colors flex items-center gap-2"
+                >
+                  <Mail size={12} />
+                  Messages ({messages.length})
+                </button>
+                <button 
+                  onClick={() => setIsEditingConfig(true)}
+                  className="text-[10px] font-mono uppercase tracking-widest text-orange-500 hover:text-orange-400 transition-colors flex items-center gap-2"
+                >
+                  <Edit3 size={12} />
+                  Edit Site Content
+                </button>
+              </>
             )}
             <button 
               onClick={handleLogout}
@@ -1441,6 +1485,63 @@ export default function App() {
                   <button type="button" onClick={() => setIsEditingConfig(false)} className="px-6 py-3 border border-white/10 rounded-xl text-xs uppercase tracking-widest">Cancel</button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+
+        {isViewingMessages && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="w-full max-w-3xl bg-zinc-900 border border-white/10 rounded-2xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-xl font-mono font-bold text-white uppercase flex items-center gap-2">
+                  <Mail size={20} className="text-orange-500" />
+                  Contact Messages
+                </h2>
+                <button 
+                  onClick={() => setIsViewingMessages(false)}
+                  className="p-2 text-zinc-500 hover:text-white transition-colors"
+                >
+                  <Plus size={24} className="rotate-45" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {messages.length === 0 ? (
+                  <div className="text-center py-12 border border-dashed border-white/5 rounded-2xl">
+                    <Mail size={40} className="mx-auto text-zinc-800 mb-4" />
+                    <p className="text-zinc-500 font-mono text-sm">No messages received yet.</p>
+                  </div>
+                ) : (
+                  messages.map((msg) => (
+                    <div key={msg.id} className="p-6 bg-black/40 border border-white/5 rounded-2xl group relative">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-white font-bold">{msg.name}</h3>
+                          <p className="text-orange-500 text-xs font-mono">{msg.email}</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-[10px] font-mono text-zinc-600 uppercase">
+                            {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleString() : 'Just now'}
+                          </span>
+                          <button 
+                            onClick={() => handleDeleteMessage(msg.id)}
+                            className="p-2 text-red-500/30 hover:text-red-500 transition-colors"
+                            title="Delete message"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                    </div>
+                  ))
+                )}
+              </div>
             </motion.div>
           </div>
         )}
