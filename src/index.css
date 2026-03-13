@@ -39,4 +39,15 @@ body {
   body {
     background: white;
   }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+    position: static !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    left: 0 !important;
+    top: 0 !important;
+  }
 }

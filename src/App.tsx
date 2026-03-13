@@ -478,23 +478,44 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [logs, setLogs] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   
-  const bootLogs = [
+  const logPool = [
     "INITIALIZING SYSTEM KERNEL...",
     "LOADING IT MANAGEMENT MODULES...",
     "MOUNTING SYSTEM_ARCHITECTURE.BIN...",
     "ESTABLISHING SECURE CONNECTION...",
     "VERIFYING ADMIN CREDENTIALS...",
     "BOOTING PORTFOLIO INTERFACE...",
+    "SCANNING NETWORK TOPOLOGY...",
+    "DECRYPTING SECURITY PROTOCOLS...",
+    "ALLOCATING VIRTUAL MEMORY...",
+    "SYNCING DATABASE CLUSTERS...",
+    "OPTIMIZING SYSTEM THROUGHPUT...",
+    "CHECKING FIREWALL INTEGRITY...",
+    "LOADING NEURAL INTERFACE...",
+    "CALIBRATING SENSORS...",
+    "BYPASSING ENCRYPTION LAYERS...",
+    "RECONSTRUCTING DATA PACKETS...",
+    "MAPPING CLOUD INFRASTRUCTURE...",
+    "ISOLATING MALWARE SIGNATURES...",
+    "UPDATING ARCHITECTURE SCHEMAS...",
+    "ESTABLISHING NEURAL HANDSHAKE...",
+    "REDUNDANCY CHECK IN PROGRESS...",
+    "FLUSHING CACHE BUFFERS...",
+    "RE-INDEXING SYSTEM REGISTRY...",
+    "INITIALIZING CRYPTO-MODULES...",
     "SYSTEM READY."
   ];
 
   useEffect(() => {
-    // Small delay to let the browser settle and prevent layout shift warnings
+    // Generate a random subset of logs for this session
+    const shuffled = [...logPool.slice(0, -1)].sort(() => 0.5 - Math.random());
+    const selectedLogs = [...shuffled.slice(0, 6), logPool[logPool.length - 1]];
+
     const startTimeout = setTimeout(() => {
       let currentLog = 0;
       const logInterval = setInterval(() => {
-        if (currentLog < bootLogs.length) {
-          setLogs(prev => [...prev, `> ${bootLogs[currentLog]}`]);
+        if (currentLog < selectedLogs.length) {
+          setLogs(prev => [...prev, `> ${selectedLogs[currentLog]}`]);
           currentLog++;
         } else {
           clearInterval(logInterval);
@@ -703,14 +724,16 @@ export default function App() {
   const handlePrint = useReactToPrint({
     contentRef: cvRef,
     documentTitle: `Daniil_Kachkovskyy_CV_${lang.toUpperCase()}`,
+    onAfterPrint: () => console.log("Print completed"),
+    onPrintError: (error) => console.error("Print error:", error),
   });
 
   const onDownloadCV = () => {
     if (cvRef.current) {
-      // Small delay to ensure DOM stability and ref attachment
+      // Use a slightly longer delay and ensure the component is fully rendered
       setTimeout(() => {
         handlePrint();
-      }, 50);
+      }, 150);
     }
   };
   
@@ -933,7 +956,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-300 font-sans selection:bg-orange-500/30 selection:text-orange-200 overflow-x-hidden">
+    <div className="min-h-screen bg-[#050505] text-zinc-300 font-sans selection:bg-orange-500/30 selection:text-orange-200 overflow-x-hidden no-print">
       {/* Language Switcher */}
       <div className={`fixed right-4 z-[70] flex gap-2 bg-zinc-900/50 backdrop-blur-md p-1 rounded-lg border border-white/10 transition-all ${user ? 'top-16' : 'top-4'}`}>
         <button 
@@ -2048,7 +2071,7 @@ export default function App() {
 
       {/* Hidden CV for printing - using a more robust method for iframe environments */}
       <div 
-        className="fixed pointer-events-none overflow-hidden" 
+        className="fixed pointer-events-none overflow-hidden print-only" 
         style={{ 
           left: '-10000px', 
           top: '-10000px', 
