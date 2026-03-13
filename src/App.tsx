@@ -264,21 +264,22 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
   const isPt = lang === 'pt';
 
   const StarRating = ({ level }: { level: number }) => (
-    <div className="flex gap-0.5">
+    <div className="flex gap-0.5" style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
       {[1, 2, 3, 4, 5].map((s) => (
         <Star 
           key={s} 
           size={10} 
           className={s <= level ? "fill-white text-white" : "text-zinc-600"} 
+          style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
         />
       ))}
     </div>
   );
 
   return (
-    <div ref={ref} className="bg-white text-black font-sans w-[210mm] h-[297mm] flex shadow-2xl overflow-hidden print:shadow-none">
+    <div ref={ref} className="bg-white text-black font-sans w-[210mm] h-[297mm] flex shadow-2xl overflow-hidden print:shadow-none print:flex" style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
       {/* Sidebar */}
-      <div className="w-[32%] bg-[#2d2d2d] text-white p-6 flex flex-col gap-6">
+      <div className="w-[32%] bg-[#2d2d2d] text-white p-6 flex flex-col gap-6" style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
         {/* Profile Image */}
         <div className="flex justify-center">
           <div className="w-40 h-40 rounded-full border-4 border-white/10 overflow-hidden bg-zinc-800">
