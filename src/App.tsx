@@ -276,9 +276,9 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
   );
 
   return (
-    <div ref={ref} className="bg-white text-black font-sans w-[210mm] min-h-[297mm] flex shadow-2xl overflow-hidden">
+    <div ref={ref} className="bg-white text-black font-sans w-[210mm] h-[297mm] flex shadow-2xl overflow-hidden print:shadow-none">
       {/* Sidebar */}
-      <div className="w-[32%] bg-[#2d2d2d] text-white p-8 flex flex-col gap-8">
+      <div className="w-[32%] bg-[#2d2d2d] text-white p-6 flex flex-col gap-6">
         {/* Profile Image */}
         <div className="flex justify-center">
           <div className="w-40 h-40 rounded-full border-4 border-white/10 overflow-hidden bg-zinc-800">
@@ -312,15 +312,21 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
             </li>
             <li className="flex items-center gap-3">
               <Github size={12} className="text-zinc-400" />
-              github.com/{config.contacts.github}
+              <a href={`https://github.com/${config.contacts.github}`} target="_blank" rel="noopener noreferrer" className="hover:text-orange-400 transition-colors">
+                github.com/{config.contacts.github}
+              </a>
             </li>
             <li className="flex items-center gap-3">
               <Linkedin size={12} className="text-zinc-400" />
-              linkedin.com/in/{config.contacts.linkedin}
+              <a href={`https://linkedin.com/in/${config.contacts.linkedin}`} target="_blank" rel="noopener noreferrer" className="hover:text-orange-400 transition-colors">
+                linkedin.com/in/{config.contacts.linkedin}
+              </a>
             </li>
             <li className="flex items-center gap-3">
               <Globe size={12} className="text-zinc-400" />
-              {config.contacts.website}
+              <a href={config.contacts.website.startsWith('http') ? config.contacts.website : `https://${config.contacts.website}`} target="_blank" rel="noopener noreferrer" className="hover:text-orange-400 transition-colors">
+                {config.contacts.website}
+              </a>
             </li>
           </ul>
         </section>
@@ -375,17 +381,17 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-12 flex flex-col gap-10">
+      <div className="flex-1 p-10 flex flex-col gap-6">
         {/* Header */}
         <header>
-          <h1 className="text-5xl font-black text-[#2d2d2d] uppercase tracking-tight leading-none mb-2">
+          <h1 className="text-4xl font-black text-[#2d2d2d] uppercase tracking-tight leading-none mb-2">
             {(data.fullName || "Daniil Kachkovskyy").split(' ').map((part, i, arr) => (
               <React.Fragment key={i}>
                 {part}{i < arr.length - 1 && <br />}
               </React.Fragment>
             ))}
           </h1>
-          <p className="text-sm font-bold text-orange-500 uppercase tracking-[0.2em]">
+          <p className="text-xs font-bold text-orange-500 uppercase tracking-[0.2em]">
             {data.jobTitle}
           </p>
         </header>
@@ -403,11 +409,11 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
 
         {/* Education */}
         <section>
-          <h2 className="text-xl font-bold uppercase tracking-widest flex items-center gap-3 mb-6 text-[#2d2d2d]">
-            <GraduationCap size={20} className="text-[#2d2d2d]" />
+          <h2 className="text-lg font-bold uppercase tracking-widest flex items-center gap-3 mb-4 text-[#2d2d2d]">
+            <GraduationCap size={18} className="text-[#2d2d2d]" />
             {isPt ? 'Formação Académica' : 'Education'}
           </h2>
-          <div className="space-y-8 border-l-2 border-zinc-100 ml-2.5 pl-6">
+          <div className="space-y-5 border-l-2 border-zinc-100 ml-2.5 pl-6">
             {data.education.map((edu, i) => (
               <div key={i} className="relative">
                 <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-white" />
@@ -424,11 +430,11 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
 
         {/* Certifications */}
         <section>
-          <h2 className="text-xl font-bold uppercase tracking-widest flex items-center gap-3 mb-6 text-[#2d2d2d]">
-            <Award size={20} className="text-[#2d2d2d]" />
+          <h2 className="text-lg font-bold uppercase tracking-widest flex items-center gap-3 mb-4 text-[#2d2d2d]">
+            <Award size={18} className="text-[#2d2d2d]" />
             {isPt ? 'Certificações' : 'Certifications'}
           </h2>
-          <div className="space-y-8 border-l-2 border-zinc-100 ml-2.5 pl-6">
+          <div className="space-y-5 border-l-2 border-zinc-100 ml-2.5 pl-6">
             {data.certifications.map((cert, i) => (
               <div key={i} className="relative">
                 <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-white" />
@@ -445,11 +451,11 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
 
         {/* Experience */}
         <section>
-          <h2 className="text-xl font-bold uppercase tracking-widest flex items-center gap-3 mb-6 text-[#2d2d2d]">
-            <Briefcase size={20} className="text-[#2d2d2d]" />
+          <h2 className="text-lg font-bold uppercase tracking-widest flex items-center gap-3 mb-4 text-[#2d2d2d]">
+            <Briefcase size={18} className="text-[#2d2d2d]" />
             {isPt ? 'Experiência Profissional' : 'Experience'}
           </h2>
-          <div className="space-y-8 border-l-2 border-zinc-100 ml-2.5 pl-6">
+          <div className="space-y-5 border-l-2 border-zinc-100 ml-2.5 pl-6">
             {data.experiences.map((exp, i) => (
               <div key={i} className="relative">
                 <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-white" />
