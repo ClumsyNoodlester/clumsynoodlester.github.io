@@ -23,7 +23,13 @@ import {
   Trash2,
   Edit3,
   LogOut,
-  Lock
+  Lock,
+  Phone,
+  MapPin,
+  Star,
+  GraduationCap,
+  Award,
+  BookOpen
 } from 'lucide-react';
 import { 
   auth, 
@@ -80,64 +86,168 @@ interface Experience {
   points: string[];
 }
 
+interface Education {
+  degree: string;
+  institution: string;
+  period: string;
+  points: string[];
+}
+
+interface Certification {
+  title: string;
+  subtitle: string;
+  period: string;
+  points: string[];
+}
+
+interface PersonalSkill {
+  name: string;
+  description: string;
+}
+
+interface TechSkill {
+  name: string;
+  level: number;
+}
+
+interface ContactInfo {
+  phone: string;
+  email: string;
+  location: string;
+  github: string;
+  linkedin: string;
+  website: string;
+}
+
 interface LanguageData {
+  fullName: string;
   introText: string;
   jobTitle: string;
   statusLine: string;
   bio: string;
   profileText: string;
+  aboutMe: string;
   experiences: Experience[];
+  education: Education[];
+  certifications: Certification[];
+  personalSkills: PersonalSkill[];
 }
 
 interface SiteConfig {
   en: LanguageData;
   pt: LanguageData;
   profileImage: string;
-  skills: string[];
+  contacts: ContactInfo;
+  technicalSkills: TechSkill[];
   languages: Language[];
 }
 
 const DEFAULT_CONFIG: SiteConfig = {
   en: {
+    fullName: "Daniil Kachkovskyy",
     introText: "Hi! I'm Daniil Kachkovskyy, a student of Information Technologies Management at Universidade Lusófona in Lisbon.",
     jobTitle: "IT Management Student | System Administration & Architecture Enthusiast",
     statusLine: "Building stable and efficient systems...",
     bio: "I'm deeply enthusiastic about system administration and system architecture. I focus on building stable, scalable, and efficient technological infrastructures, with a strong parallel interest in cybersecurity to ensure every system I design is inherently secure.",
     profileText: "I'm currently pursuing a Bachelor's degree in Information Technologies Management, focusing on system architecture, administration, and secure infrastructure design.",
+    aboutMe: "I am an Information Technology Management student with an interest in programming, systems administration, and cybersecurity. I have been responsible for the checkout team at my workplace, which helped me develop leadership, organization, and communication skills. In the future, I intend to pursue a career in the field of information technology, with a special interest in systems administration and architecture, networking, and cybersecurity. I want to contribute to the construction and maintenance of secure, stable, and efficient technological infrastructures that have a positive impact on the lives of people and organizations.",
     experiences: [
       {
-        title: "Checkout Operator / Team Lead",
-        company: "Intermarché – Algueirão-Mem Martins",
+        title: "CHECKOUT OPERATOR / TEAM LEAD",
+        company: "INTERMARCHÉ – ALGUEIRÃO-MEM MARTINS",
         period: "March 2024 – Present",
         points: [
-          "Customer service and payment processing at the checkout.",
-          "Team coordination for the checkout crew.",
-          "Developed communication, leadership, and team collaboration skills."
+          "Customer service and checkout payment management",
+          "Responsible for coordinating the checkout team",
+          "Development of skills in communication, responsibility, and teamwork"
         ]
       }
+    ],
+    education: [
+      {
+        degree: "BACHELOR'S IN MANAGEMENT INFORMATICS",
+        institution: "UNIVERSIDADE LUSÓFONA DE HUMANIDADES E TECNOLOGIAS – LISBOA",
+        period: "September 2024 – Present",
+        points: [
+          "Focus on programming (Java, C), mathematics, statistics, and information systems fundamentals",
+          "In development: algorithmic thinking, behavioral skills, and logical reasoning"
+        ]
+      }
+    ],
+    certifications: [
+      {
+        title: "INTRODUCTION TO INFORMATION SECURITY",
+        subtitle: "PROFESSIONAL TRAINING CERTIFICATE",
+        period: "March 2025",
+        points: ["Information Security", "ISO/IEC 27001", "NIS2", "DORA Regulation"]
+      }
+    ],
+    personalSkills: [
+      { name: "Sense of responsibility and organization", description: "Responsible for coordinating the checkout team" },
+      { name: "Good communication and teamwork skills", description: "Collaboration with different sales areas within the store" },
+      { name: "Customer Service", description: "Creating bonds of trust with customers as a checkout operator" }
     ]
   },
   pt: {
+    fullName: "Daniil Kachkovskyy",
     introText: "Olá! Sou o Daniil Kachkovskyy, estudante de Informática de Gestão na Universidade Lusófona em Lisboa.",
     jobTitle: "Estudante de Informática de Gestão | Entusiasta de Administração e Arquitetura de Sistemas",
     statusLine: "Construindo sistemas estáveis e eficientes...",
     bio: "Sou profundamente entusiasta pela administração e arquitetura de sistemas. Foco-me na construção de infraestruturas tecnológicas estáveis, escaláveis e eficientes, com um forte interesse paralelo em cibersegurança para garantir que cada sistema que desenho seja inerentemente seguro.",
     profileText: "Estou atualmente a tirar a Licenciatura em Informática de Gestão, com foco em arquitetura de sistemas, administração e design de infraestruturas seguras.",
+    aboutMe: "Sou estudante de Informática de Gestão com interesse em programação, administração de sistemas e cibersegurança. Já fui responsável pela equipa de caixas no meu local de trabalho, o que me ajudou a desenvolver competências de liderança, organização e comunicação. No futuro, pretendo seguir uma carreira na área das tecnologias da informação, com especial interesse em administração e arquitetura de sistemas, redes e cibersegurança. Quero contribuir para a construção e manutenção de infraestruturas tecnológicas seguras, estáveis e eficientes, que tenham impacto positivo na vida das pessoas e das organizações.",
     experiences: [
       {
-        title: "Operador / Responsável de Caixa",
-        company: "Intermarché – Algueirão-Mem Martins",
+        title: "OPERADOR / RESPONSÁVEL DE CAIXA",
+        company: "INTERMARCHÉ – ALGUEIRÃO-MEM MARTINS",
         period: "Março 2024 – Presente",
         points: [
-          "Atendimento ao público e gestão de pagamentos em caixa.",
-          "Coordenação da equipa de caixas.",
-          "Desenvolvimento de competências em comunicação, liderança e trabalho em equipa."
+          "Atendimento ao público e gestão de pagamentos em caixa",
+          "Responsável pela coordenação da equipa de caixas",
+          "Desenvolvimento de competências em comunicação, responsabilidade e trabalho em equipa"
         ]
       }
+    ],
+    education: [
+      {
+        degree: "LICENCIATURA EM INFORMÁTICA DE GESTÃO",
+        institution: "UNIVERSIDADE LUSÓFONA DE HUMANIDADES E TECNOLOGIAS – LISBOA",
+        period: "Setembro 2024 – Presente",
+        points: [
+          "Foco em programação (Java, C), matemática, estatística, e fundamentos de sistemas de informação",
+          "Em desenvolvimento: pensamento algorítmico, competências comportamentais e raciocínio lógico"
+        ]
+      }
+    ],
+    certifications: [
+      {
+        title: "INTRODUÇÃO À SEGURANÇA DA INFORMAÇÃO",
+        subtitle: "CERTIFICADO DE FORMAÇÃO PROFISSIONAL",
+        period: "Março de 2025",
+        points: ["Segurança da Informação", "ISO/IEC 27001", "NIS2", "Regulamento DORA"]
+      }
+    ],
+    personalSkills: [
+      { name: "Sentido de responsabilidade e organização", description: "Responsável pela coordenação da equipa das caixas" },
+      { name: "Boa capacidade de comunicação e trabalho em equipa", description: "Colaboração com as diferentes áreas de venda dentro da loja" },
+      { name: "Atendimento ao Público", description: "Criando laços de confiança com os clientes como operador de caixa" }
     ]
   },
-  profileImage: "https://picsum.photos/seed/daniil/200/200",
-  skills: ['System Architecture', 'Systems Admin', 'Cybersecurity', 'Python', 'Java', 'C'],
+  profileImage: "https://picsum.photos/seed/daniil/400/400",
+  contacts: {
+    phone: "+351 934 988 323",
+    email: "dan.kachkyy@gmail.com",
+    location: "Lisboa, Portugal",
+    github: "ClumsyNoodlester",
+    linkedin: "dankachkyy",
+    website: "daniil.dev"
+  },
+  technicalSkills: [
+    { name: "Python", level: 4 },
+    { name: "Kotlin", level: 3 },
+    { name: "Java", level: 2 },
+    { name: "C", level: 2 }
+  ],
   languages: [
     { name: 'Portuguese', level: 'Native' },
     { name: 'English', level: 'Fluent' },
@@ -153,94 +263,206 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
   const data = config[lang];
   const isPt = lang === 'pt';
 
+  const StarRating = ({ level }: { level: number }) => (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star 
+          key={s} 
+          size={10} 
+          className={s <= level ? "fill-white text-white" : "text-zinc-600"} 
+        />
+      ))}
+    </div>
+  );
+
   return (
-    <div ref={ref} className="p-12 bg-white text-black font-sans max-w-[210mm] mx-auto min-h-[297mm]">
-      <div className="flex justify-between items-start border-b-2 border-orange-500 pb-8 mb-8">
-        <div>
-          <h1 className="text-4xl font-black uppercase tracking-tighter mb-2">Daniil <span className="text-orange-500">Kachkovskyy</span></h1>
-          <p className="text-zinc-600 font-mono text-sm uppercase tracking-widest">{data.jobTitle}</p>
+    <div ref={ref} className="bg-white text-black font-sans w-[210mm] min-h-[297mm] flex shadow-2xl overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-[32%] bg-[#2d2d2d] text-white p-8 flex flex-col gap-8">
+        {/* Profile Image */}
+        <div className="flex justify-center">
+          <div className="w-40 h-40 rounded-full border-4 border-white/10 overflow-hidden bg-zinc-800">
+            <img 
+              src={config.profileImage} 
+              alt="Profile" 
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          </div>
         </div>
-        <div className="text-right text-xs space-y-1 text-zinc-500 font-mono">
-          <p>dan.kachkyy@gmail.com</p>
-          <p>+351 934 988 323</p>
-          <p>Lisboa, Portugal</p>
-        </div>
+
+        {/* Contacts */}
+        <section>
+          <h2 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
+            <UserIcon size={14} />
+            {isPt ? 'Contactos' : 'Contacts'}
+          </h2>
+          <ul className="space-y-3 text-[10px]">
+            <li className="flex items-center gap-3">
+              <Phone size={12} className="text-zinc-400" />
+              {config.contacts.phone}
+            </li>
+            <li className="flex items-center gap-3">
+              <Mail size={12} className="text-zinc-400" />
+              {config.contacts.email}
+            </li>
+            <li className="flex items-center gap-3">
+              <MapPin size={12} className="text-zinc-400" />
+              {config.contacts.location}
+            </li>
+            <li className="flex items-center gap-3">
+              <Github size={12} className="text-zinc-400" />
+              github.com/{config.contacts.github}
+            </li>
+            <li className="flex items-center gap-3">
+              <Linkedin size={12} className="text-zinc-400" />
+              linkedin.com/in/{config.contacts.linkedin}
+            </li>
+            <li className="flex items-center gap-3">
+              <Globe size={12} className="text-zinc-400" />
+              {config.contacts.website}
+            </li>
+          </ul>
+        </section>
+
+        {/* Technical Skills */}
+        <section>
+          <h2 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
+            <Cpu size={14} />
+            {isPt ? 'Competências Técnicas' : 'Technical Skills'}
+          </h2>
+          <ul className="space-y-2">
+            {config.technicalSkills.map((skill, i) => (
+              <li key={i} className="flex justify-between items-center text-[10px]">
+                <span className="font-mono">{skill.name}</span>
+                <StarRating level={skill.level} />
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Personal Skills */}
+        <section>
+          <h2 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
+            <UserIcon size={14} />
+            {isPt ? 'Competências Pessoais' : 'Personal Skills'}
+          </h2>
+          <ul className="space-y-4 text-[10px]">
+            {data.personalSkills.map((skill, i) => (
+              <li key={i}>
+                <p className="font-bold underline mb-1">{skill.name}</p>
+                <p className="text-zinc-400 leading-tight">{skill.description}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Languages */}
+        <section>
+          <h2 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
+            <Globe size={14} />
+            {isPt ? 'Linguísticos' : 'Languages'}
+          </h2>
+          <ul className="space-y-2 text-[10px]">
+            {config.languages.map((lang, i) => (
+              <li key={i} className="flex items-center gap-2">
+                <span className="font-bold">{lang.name}</span>
+                <span className="text-zinc-400">— {lang.level}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
 
-      <div className="grid grid-cols-3 gap-12">
-        <div className="col-span-2 space-y-8">
-          <section>
-            <h2 className="text-lg font-bold uppercase tracking-widest border-l-4 border-orange-500 pl-3 mb-4">{isPt ? 'Sobre Mim' : 'About Me'}</h2>
-            <p className="text-sm leading-relaxed text-zinc-700">{data.bio}</p>
-          </section>
+      {/* Main Content */}
+      <div className="flex-1 p-12 flex flex-col gap-10">
+        {/* Header */}
+        <header>
+          <h1 className="text-5xl font-black text-[#2d2d2d] uppercase tracking-tight leading-none mb-2">
+            {(data.fullName || "Daniil Kachkovskyy").split(' ').map((part, i, arr) => (
+              <React.Fragment key={i}>
+                {part}{i < arr.length - 1 && <br />}
+              </React.Fragment>
+            ))}
+          </h1>
+          <p className="text-sm font-bold text-orange-500 uppercase tracking-[0.2em]">
+            {data.jobTitle}
+          </p>
+        </header>
 
-          <section>
-            <h2 className="text-lg font-bold uppercase tracking-widest border-l-4 border-orange-500 pl-3 mb-4">{isPt ? 'Experiência Profissional' : 'Experience'}</h2>
-            <div className="space-y-6">
-              {data.experiences.map((exp, i) => (
-                <div key={i}>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <h3 className="font-bold text-zinc-900">{exp.title}</h3>
-                    <span className="text-xs font-mono text-orange-500">{exp.period}</span>
-                  </div>
-                  <p className="text-xs font-bold text-zinc-500 mb-2 uppercase tracking-wider">{exp.company}</p>
-                  <ul className="text-xs text-zinc-600 space-y-1 list-disc pl-4">
-                    {exp.points.map((p, j) => <li key={j}>{p}</li>)}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </section>
+        {/* About Me */}
+        <section>
+          <h2 className="text-xl font-bold uppercase tracking-widest flex items-center gap-3 mb-4 text-[#2d2d2d]">
+            <UserIcon size={20} className="text-[#2d2d2d]" />
+            {isPt ? 'Sobre Mim' : 'About Me'}
+          </h2>
+          <p className="text-xs leading-relaxed text-zinc-700 text-justify">
+            {data.aboutMe}
+          </p>
+        </section>
 
-          <section>
-            <h2 className="text-lg font-bold uppercase tracking-widest border-l-4 border-orange-500 pl-3 mb-4">{isPt ? 'Formação Académica' : 'Education'}</h2>
-            <div>
-              <div className="flex justify-between items-baseline mb-1">
-                <h3 className="font-bold text-zinc-900">{isPt ? 'Licenciatura em Informática de Gestão' : "Bachelor's in Management Informatics"}</h3>
-                <span className="text-xs font-mono text-orange-500">{isPt ? 'Setembro 2024 – Presente' : 'September 2024 – Present'}</span>
+        {/* Education */}
+        <section>
+          <h2 className="text-xl font-bold uppercase tracking-widest flex items-center gap-3 mb-6 text-[#2d2d2d]">
+            <GraduationCap size={20} className="text-[#2d2d2d]" />
+            {isPt ? 'Formação Académica' : 'Education'}
+          </h2>
+          <div className="space-y-8 border-l-2 border-zinc-100 ml-2.5 pl-6">
+            {data.education.map((edu, i) => (
+              <div key={i} className="relative">
+                <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-white" />
+                <h3 className="text-sm font-bold text-[#2d2d2d] mb-1">{edu.degree}</h3>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">{edu.institution}</p>
+                <p className="text-[10px] text-orange-500 font-mono mb-3">{edu.period}</p>
+                <ul className="text-[10px] text-zinc-600 space-y-1 list-disc pl-4">
+                  {edu.points.map((p, j) => <li key={j}>{p}</li>)}
+                </ul>
               </div>
-              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Universidade Lusófona de Humanidades e Tecnologias – Lisboa</p>
-            </div>
-          </section>
-        </div>
+            ))}
+          </div>
+        </section>
 
-        <div className="space-y-8">
-          <section>
-            <h2 className="text-sm font-bold uppercase tracking-widest border-b border-zinc-200 pb-2 mb-4">{isPt ? 'Competências' : 'Skills'}</h2>
-            <div className="flex flex-wrap gap-1">
-              {config.skills.map(s => (
-                <span key={s} className="text-[10px] px-2 py-0.5 bg-zinc-100 rounded text-zinc-600 font-mono">{s}</span>
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-sm font-bold uppercase tracking-widest border-b border-zinc-200 pb-2 mb-4">{isPt ? 'Idiomas' : 'Languages'}</h2>
-            <div className="space-y-2">
-              {config.languages.map(l => (
-                <div key={l.name} className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-zinc-700">{l.name}</span>
-                  <span className="text-[10px] font-mono text-zinc-400 uppercase">{l.level}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-sm font-bold uppercase tracking-widest border-b border-zinc-200 pb-2 mb-4">{isPt ? 'Certificações' : 'Certifications'}</h2>
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs font-bold text-zinc-700">{isPt ? 'Introdução à Segurança da Informação' : 'Intro to Information Security'}</p>
-                <p className="text-[10px] text-zinc-400 font-mono">Março 2025</p>
+        {/* Certifications */}
+        <section>
+          <h2 className="text-xl font-bold uppercase tracking-widest flex items-center gap-3 mb-6 text-[#2d2d2d]">
+            <Award size={20} className="text-[#2d2d2d]" />
+            {isPt ? 'Certificações' : 'Certifications'}
+          </h2>
+          <div className="space-y-8 border-l-2 border-zinc-100 ml-2.5 pl-6">
+            {data.certifications.map((cert, i) => (
+              <div key={i} className="relative">
+                <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-white" />
+                <h3 className="text-sm font-bold text-[#2d2d2d] mb-1">{cert.title}</h3>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">{cert.subtitle}</p>
+                <p className="text-[10px] text-orange-500 font-mono mb-3">{cert.period}</p>
+                <ul className="text-[10px] text-zinc-600 space-y-1 list-disc pl-4">
+                  {cert.points.map((p, j) => <li key={j}>{p}</li>)}
+                </ul>
               </div>
-              <ul className="text-[10px] text-zinc-500 space-y-1 list-disc pl-4">
-                <li>ISO/IEC 27001</li>
-                <li>NIS2</li>
-                <li>DORA</li>
-              </ul>
-            </div>
-          </section>
-        </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Experience */}
+        <section>
+          <h2 className="text-xl font-bold uppercase tracking-widest flex items-center gap-3 mb-6 text-[#2d2d2d]">
+            <Briefcase size={20} className="text-[#2d2d2d]" />
+            {isPt ? 'Experiência Profissional' : 'Experience'}
+          </h2>
+          <div className="space-y-8 border-l-2 border-zinc-100 ml-2.5 pl-6">
+            {data.experiences.map((exp, i) => (
+              <div key={i} className="relative">
+                <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-white" />
+                <h3 className="text-sm font-bold text-[#2d2d2d] mb-1">{exp.title}</h3>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">{exp.company}</p>
+                <p className="text-[10px] text-orange-500 font-mono mb-3">{exp.period}</p>
+                <ul className="text-[10px] text-zinc-600 space-y-1 list-disc pl-4">
+                  {exp.points.map((p, j) => <li key={j}>{p}</li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
@@ -461,6 +683,7 @@ export default function App() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [siteConfig, setSiteConfig] = useState<SiteConfig>(DEFAULT_CONFIG);
   const [isEditingConfig, setIsEditingConfig] = useState(false);
+  const [configTab, setConfigTab] = useState<'basic' | 'contacts' | 'experience' | 'education' | 'certs' | 'skills' | 'languages'>('basic');
   const [isUploading, setIsUploading] = useState(false);
   const [lang, setLang] = useState<'en' | 'pt'>('en');
   const [editLang, setEditLang] = useState<'en' | 'pt'>('en');
@@ -501,34 +724,41 @@ export default function App() {
     const unsubscribeConfig = onSnapshot(doc(db, 'config', 'main'), (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data() as any;
-        // Check if it's the new structure with 'en' and 'pt'
-        if (data.en && data.pt) {
+        // Check if it's the new structure with 'en' and 'pt' and 'contacts'
+        if (data.en && data.pt && data.contacts) {
           setSiteConfig(data as SiteConfig);
           setConfigForm(data as SiteConfig);
         } else {
-          // Old structure - migrate it to the new multilingual format
+          // Old structure - migrate it to the new format
           const migrated: SiteConfig = {
+            ...DEFAULT_CONFIG,
             en: {
-              introText: data.introText || DEFAULT_CONFIG.en.introText,
-              jobTitle: data.jobTitle || DEFAULT_CONFIG.en.jobTitle,
-              statusLine: data.statusLine || DEFAULT_CONFIG.en.statusLine,
-              bio: data.bio || DEFAULT_CONFIG.en.bio,
-              profileText: data.profileText || DEFAULT_CONFIG.en.profileText,
-              experiences: data.experiences || DEFAULT_CONFIG.en.experiences,
+              ...DEFAULT_CONFIG.en,
+              fullName: data.en?.fullName || data.fullName || DEFAULT_CONFIG.en.fullName,
+              introText: data.en?.introText || data.introText || DEFAULT_CONFIG.en.introText,
+              jobTitle: data.en?.jobTitle || data.jobTitle || DEFAULT_CONFIG.en.jobTitle,
+              statusLine: data.en?.statusLine || data.statusLine || DEFAULT_CONFIG.en.statusLine,
+              bio: data.en?.bio || data.bio || DEFAULT_CONFIG.en.bio,
+              profileText: data.en?.profileText || data.profileText || DEFAULT_CONFIG.en.profileText,
+              experiences: data.en?.experiences || data.experiences || DEFAULT_CONFIG.en.experiences,
             },
             pt: {
               ...DEFAULT_CONFIG.pt,
+              fullName: data.pt?.fullName || DEFAULT_CONFIG.pt.fullName,
+              introText: data.pt?.introText || DEFAULT_CONFIG.pt.introText,
+              jobTitle: data.pt?.jobTitle || DEFAULT_CONFIG.pt.jobTitle,
               statusLine: data.pt?.statusLine || DEFAULT_CONFIG.pt.statusLine,
+              bio: data.pt?.bio || DEFAULT_CONFIG.pt.bio,
+              profileText: data.pt?.profileText || DEFAULT_CONFIG.pt.profileText,
+              experiences: data.pt?.experiences || DEFAULT_CONFIG.pt.experiences,
             },
             profileImage: data.profileImage || DEFAULT_CONFIG.profileImage,
-            skills: data.skills || DEFAULT_CONFIG.skills,
+            contacts: data.contacts || DEFAULT_CONFIG.contacts,
+            technicalSkills: data.technicalSkills || DEFAULT_CONFIG.technicalSkills,
             languages: data.languages || DEFAULT_CONFIG.languages,
           };
           setSiteConfig(migrated);
           setConfigForm(migrated);
-          
-          // Optionally, if the user is an admin, we could auto-save the migrated version
-          // but it's safer to just handle it in memory until they save manually.
         }
       }
     });
@@ -952,9 +1182,9 @@ export default function App() {
                   <div className="space-y-4">
                     <h4 className="text-white font-mono text-sm uppercase border-b border-white/5 pb-2">{lang === 'en' ? 'Technical Stack' : 'Stack Técnica'}</h4>
                     <div className="flex flex-wrap gap-2">
-                      {siteConfig.skills.map(skill => (
-                        <span key={skill} className="px-3 py-1 bg-zinc-800 border border-white/5 rounded-full text-xs text-zinc-400">
-                          {skill}
+                      {siteConfig.technicalSkills.map(skill => (
+                        <span key={skill.name} className="px-3 py-1 bg-zinc-800 border border-white/5 rounded-full text-xs text-zinc-400 font-mono">
+                          {skill.name}
                         </span>
                       ))}
                     </div>
@@ -1150,341 +1380,587 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-2xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-4xl bg-zinc-900 border border-white/10 rounded-2xl p-8 shadow-2xl max-h-[90vh] overflow-hidden flex flex-col"
             >
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-6 flex-shrink-0">
                   <h2 className="text-xl font-mono font-bold text-white uppercase flex items-center gap-2">
                     <Edit3 size={20} className="text-orange-500" />
                     Edit Site Content
                   </h2>
                   <div className="flex gap-2 bg-black/40 p-1 rounded-lg border border-white/10">
-                    <button 
-                      type="button"
-                      onClick={() => setEditLang('en')}
-                      className={`px-3 py-1 text-[10px] font-mono uppercase tracking-widest rounded transition-all ${editLang === 'en' ? 'bg-orange-500 text-black font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
-                    >
-                      English
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => setEditLang('pt')}
-                      className={`px-3 py-1 text-[10px] font-mono uppercase tracking-widest rounded transition-all ${editLang === 'pt' ? 'bg-orange-500 text-black font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
-                    >
-                      Português
-                    </button>
+                    {['en', 'pt'].map(l => (
+                      <button 
+                        key={l}
+                        type="button"
+                        onClick={() => setEditLang(l as 'en' | 'pt')}
+                        className={`px-3 py-1 text-[10px] font-mono uppercase tracking-widest rounded transition-all ${editLang === l ? 'bg-orange-500 text-black font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      >
+                        {l === 'en' ? 'English' : 'Português'}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <form onSubmit={handleUpdateConfig} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono uppercase text-zinc-500">Job Title ({editLang.toUpperCase()})</label>
-                      <input 
-                        required
-                        value={configForm[editLang].jobTitle || ''}
-                        onChange={e => setConfigForm({
-                          ...configForm,
-                          [editLang]: { ...configForm[editLang], jobTitle: e.target.value }
-                        })}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono uppercase text-zinc-500">Status Line ({editLang.toUpperCase()})</label>
-                      <input 
-                        required
-                        value={configForm[editLang].statusLine || ''}
-                        onChange={e => setConfigForm({
-                          ...configForm,
-                          [editLang]: { ...configForm[editLang], statusLine: e.target.value }
-                        })}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono uppercase text-zinc-500">Profile Image (Shared)</label>
-                      <div className="flex gap-2">
+                {/* Tabs */}
+                <div className="flex border-b border-white/10 mb-6 flex-shrink-0 overflow-x-auto no-scrollbar">
+                  {[
+                    { id: 'basic', label: 'Basic', icon: UserIcon },
+                    { id: 'contacts', label: 'Contacts', icon: Phone },
+                    { id: 'experience', label: 'Experience', icon: Briefcase },
+                    { id: 'education', label: 'Education', icon: GraduationCap },
+                    { id: 'certs', label: 'Certs', icon: Award },
+                    { id: 'skills', label: 'Skills', icon: Cpu },
+                    { id: 'languages', label: 'Langs', icon: Globe },
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setConfigTab(tab.id as any)}
+                      className={`flex items-center gap-2 px-4 py-3 text-[10px] font-mono uppercase tracking-widest border-b-2 transition-all whitespace-nowrap ${
+                        configTab === tab.id 
+                          ? 'border-orange-500 text-orange-500 bg-orange-500/5' 
+                          : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                      }`}
+                    >
+                      <tab.icon size={14} />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <form onSubmit={handleUpdateConfig} className="flex-1 overflow-y-auto pr-2 space-y-8 custom-scrollbar">
+                  {configTab === 'basic' && (
+                    <div className="space-y-6">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono uppercase text-zinc-500">Full Name ({editLang.toUpperCase()})</label>
                         <input 
                           required
-                          value={configForm.profileImage || ''}
-                          onChange={e => setConfigForm({...configForm, profileImage: e.target.value})}
-                          className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none"
-                          placeholder="Image URL"
-                        />
-                        <label className="cursor-pointer px-4 py-2 bg-zinc-800 border border-white/10 rounded-xl text-[10px] font-mono uppercase hover:bg-zinc-700 transition-colors flex items-center gap-2">
-                          {isUploading ? 'Uploading...' : 'Upload'}
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
-                            onChange={handleImageUpload}
-                            disabled={isUploading}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono uppercase text-zinc-500">Intro Text ({editLang.toUpperCase()})</label>
-                    <textarea 
-                      required
-                      value={configForm[editLang].introText || ''}
-                      onChange={e => setConfigForm({
-                        ...configForm,
-                        [editLang]: { ...configForm[editLang], introText: e.target.value }
-                      })}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none resize-none"
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono uppercase text-zinc-500">Bio ({editLang.toUpperCase()})</label>
-                    <textarea 
-                      required
-                      value={configForm[editLang].bio || ''}
-                      onChange={e => setConfigForm({
-                        ...configForm,
-                        [editLang]: { ...configForm[editLang], bio: e.target.value }
-                      })}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none resize-none"
-                      rows={4}
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono uppercase text-zinc-500">Profile Text ({editLang.toUpperCase()})</label>
-                    <textarea 
-                      required
-                      value={configForm[editLang].profileText || ''}
-                      onChange={e => setConfigForm({
-                        ...configForm,
-                        [editLang]: { ...configForm[editLang], profileText: e.target.value }
-                      })}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none resize-none"
-                      rows={3}
-                    />
-                  </div>
-
-                <div className="space-y-4">
-                  <label className="text-[10px] font-mono uppercase text-zinc-500">Technical Stack (Skills)</label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {configForm.skills.map((skill, i) => (
-                      <div key={i} className="flex items-center gap-2 px-3 py-1 bg-zinc-800 border border-white/5 rounded-full text-xs text-zinc-400">
-                        {skill}
-                        <button 
-                          type="button"
-                          onClick={() => setConfigForm({
+                          value={configForm[editLang].fullName || ''}
+                          onChange={e => setConfigForm({
                             ...configForm,
-                            skills: configForm.skills.filter((_, idx) => idx !== i)
+                            [editLang]: { ...configForm[editLang], fullName: e.target.value }
                           })}
-                          className="hover:text-red-500"
-                        >
-                          <Plus size={12} className="rotate-45" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <input 
-                      id="new-skill"
-                      placeholder="Add new skill..."
-                      className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none"
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const val = (e.target as HTMLInputElement).value.trim();
-                          if (val && !configForm.skills.includes(val)) {
-                            setConfigForm({...configForm, skills: [...configForm.skills, val]});
-                            (e.target as HTMLInputElement).value = '';
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="text-[10px] font-mono uppercase text-zinc-500">Languages</label>
-                  <div className="space-y-2">
-                    {configForm.languages.map((lang, i) => (
-                      <div key={i} className="flex gap-2">
-                        <input 
-                          value={lang.name || ''}
-                          onChange={e => {
-                            const newLangs = [...configForm.languages];
-                            newLangs[i].name = e.target.value;
-                            setConfigForm({...configForm, languages: newLangs});
-                          }}
-                          className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none"
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none"
                         />
-                        <input 
-                          value={lang.level || ''}
-                          onChange={e => {
-                            const newLangs = [...configForm.languages];
-                            newLangs[i].level = e.target.value;
-                            setConfigForm({...configForm, languages: newLangs});
-                          }}
-                          className="w-32 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none"
-                        />
-                        <button 
-                          type="button"
-                          onClick={() => setConfigForm({
-                            ...configForm,
-                            languages: configForm.languages.filter((_, idx) => idx !== i)
-                          })}
-                          className="p-2 text-red-500/50 hover:text-red-500"
-                        >
-                          <Trash2 size={18} />
-                        </button>
                       </div>
-                    ))}
-                    <button 
-                      type="button"
-                      onClick={() => setConfigForm({
-                        ...configForm,
-                        languages: [...configForm.languages, { name: '', level: '' }]
-                      })}
-                      className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
-                    >
-                      <Plus size={12} />
-                      Add Language
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="text-[10px] font-mono uppercase text-zinc-500">Work Experience ({editLang.toUpperCase()})</label>
-                  <div className="space-y-6">
-                    {configForm[editLang].experiences.map((exp, i) => (
-                      <div key={i} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-zinc-500">Job Title ({editLang.toUpperCase()})</label>
                           <input 
-                            placeholder="Job Title"
-                            value={exp.title || ''}
-                            onChange={e => {
-                              const newExps = [...configForm[editLang].experiences];
-                              newExps[i].title = e.target.value;
-                              setConfigForm({
-                                ...configForm,
-                                [editLang]: { ...configForm[editLang], experiences: newExps }
-                              });
-                            }}
-                            className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs focus:border-orange-500/50 outline-none"
-                          />
-                          <input 
-                            placeholder="Company"
-                            value={exp.company || ''}
-                            onChange={e => {
-                              const newExps = [...configForm[editLang].experiences];
-                              newExps[i].company = e.target.value;
-                              setConfigForm({
-                                ...configForm,
-                                [editLang]: { ...configForm[editLang], experiences: newExps }
-                              });
-                            }}
-                            className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs focus:border-orange-500/50 outline-none"
+                            required
+                            value={configForm[editLang].jobTitle || ''}
+                            onChange={e => setConfigForm({
+                              ...configForm,
+                              [editLang]: { ...configForm[editLang], jobTitle: e.target.value }
+                            })}
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none"
                           />
                         </div>
-                        <input 
-                          placeholder="Period (e.g. 2024 - Present)"
-                          value={exp.period || ''}
-                          onChange={e => {
-                            const newExps = [...configForm[editLang].experiences];
-                            newExps[i].period = e.target.value;
-                            setConfigForm({
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-zinc-500">Status Line ({editLang.toUpperCase()})</label>
+                          <input 
+                            required
+                            value={configForm[editLang].statusLine || ''}
+                            onChange={e => setConfigForm({
                               ...configForm,
-                              [editLang]: { ...configForm[editLang], experiences: newExps }
-                            });
-                          }}
-                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs focus:border-orange-500/50 outline-none"
+                              [editLang]: { ...configForm[editLang], statusLine: e.target.value }
+                            })}
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono uppercase text-zinc-500">Profile Image</label>
+                        <div className="flex gap-2">
+                          <input 
+                            value={configForm.profileImage || ''}
+                            onChange={e => setConfigForm({...configForm, profileImage: e.target.value})}
+                            className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none"
+                            placeholder="Image URL"
+                          />
+                          <label className="cursor-pointer px-4 py-2 bg-zinc-800 border border-white/10 rounded-xl text-[10px] font-mono uppercase hover:bg-zinc-700 transition-colors flex items-center gap-2">
+                            {isUploading ? 'Uploading...' : 'Upload'}
+                            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading} />
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono uppercase text-zinc-500">Intro Text ({editLang.toUpperCase()})</label>
+                        <textarea 
+                          value={configForm[editLang].introText || ''}
+                          onChange={e => setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], introText: e.target.value } })}
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none resize-none"
+                          rows={2}
                         />
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-mono uppercase text-zinc-600">Bullet Points</label>
-                          {exp.points.map((point, j) => (
-                            <div key={j} className="flex gap-2">
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono uppercase text-zinc-500">Bio ({editLang.toUpperCase()})</label>
+                        <textarea 
+                          value={configForm[editLang].bio || ''}
+                          onChange={e => setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], bio: e.target.value } })}
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none resize-none"
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono uppercase text-zinc-500">Profile Text ({editLang.toUpperCase()})</label>
+                        <textarea 
+                          value={configForm[editLang].profileText || ''}
+                          onChange={e => setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], profileText: e.target.value } })}
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none resize-none"
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono uppercase text-zinc-500">About Me ({editLang.toUpperCase()})</label>
+                        <textarea 
+                          value={configForm[editLang].aboutMe || ''}
+                          onChange={e => setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], aboutMe: e.target.value } })}
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none resize-none"
+                          rows={4}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {configTab === 'contacts' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.keys(configForm.contacts).map((key) => (
+                        <div key={key} className="space-y-1">
+                          <label className="text-[10px] font-mono uppercase text-zinc-500">{key}</label>
+                          <input 
+                            value={(configForm.contacts as any)[key] || ''}
+                            onChange={e => setConfigForm({
+                              ...configForm,
+                              contacts: { ...configForm.contacts, [key]: e.target.value }
+                            })}
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-orange-500/50 outline-none"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {configTab === 'experience' && (
+                    <div className="space-y-6">
+                      {configForm[editLang].experiences.map((exp, idx) => (
+                        <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-4 relative group">
+                          <button 
+                            type="button"
+                            onClick={() => setConfigForm({
+                              ...configForm,
+                              [editLang]: { ...configForm[editLang], experiences: configForm[editLang].experiences.filter((_, i) => i !== idx) }
+                            })}
+                            className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          <div className="grid grid-cols-2 gap-4">
+                            <input 
+                              placeholder="Title"
+                              value={exp.title}
+                              onChange={e => {
+                                const newExps = [...configForm[editLang].experiences];
+                                newExps[idx].title = e.target.value;
+                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
+                              }}
+                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                            />
+                            <input 
+                              placeholder="Company"
+                              value={exp.company}
+                              onChange={e => {
+                                const newExps = [...configForm[editLang].experiences];
+                                newExps[idx].company = e.target.value;
+                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
+                              }}
+                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                            />
+                          </div>
+                          <input 
+                            placeholder="Period"
+                            value={exp.period}
+                            onChange={e => {
+                              const newExps = [...configForm[editLang].experiences];
+                              newExps[idx].period = e.target.value;
+                               setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
+                            }}
+                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                          />
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-mono uppercase text-zinc-500">Points</label>
+                            {exp.points.map((point, pIdx) => (
+                              <div key={pIdx} className="flex gap-2">
+                                <input 
+                                  value={point}
+                                  onChange={e => {
+                                    const newExps = [...configForm[editLang].experiences];
+                                    newExps[idx].points[pIdx] = e.target.value;
+                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
+                                  }}
+                                  className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                                />
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const newExps = [...configForm[editLang].experiences];
+                                    newExps[idx].points = newExps[idx].points.filter((_, i) => i !== pIdx);
+                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
+                                  }}
+                                  className="text-zinc-600 hover:text-red-500"
+                                >
+                                  <Plus size={14} className="rotate-45" />
+                                </button>
+                              </div>
+                            ))}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const newExps = [...configForm[editLang].experiences];
+                                newExps[idx].points.push('');
+                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
+                              }}
+                              className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
+                            >
+                              <Plus size={12} /> Add Point
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const newExp = { title: '', company: '', period: '', points: [''] };
+                          setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: [...configForm[editLang].experiences, newExp] } });
+                        }}
+                        className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-zinc-500 hover:border-orange-500/50 hover:text-orange-500 transition-all flex items-center justify-center gap-2 font-mono text-xs uppercase"
+                      >
+                        <Plus size={16} /> Add Experience
+                      </button>
+                    </div>
+                  )}
+
+                  {configTab === 'education' && (
+                    <div className="space-y-6">
+                      {configForm[editLang].education.map((edu, idx) => (
+                        <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-4 relative group">
+                          <button 
+                            type="button"
+                            onClick={() => setConfigForm({
+                              ...configForm,
+                              [editLang]: { ...configForm[editLang], education: configForm[editLang].education.filter((_, i) => i !== idx) }
+                            })}
+                            className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          <div className="grid grid-cols-2 gap-4">
+                            <input 
+                              placeholder="Degree"
+                              value={edu.degree}
+                              onChange={e => {
+                                const newEdu = [...configForm[editLang].education];
+                                newEdu[idx].degree = e.target.value;
+                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
+                              }}
+                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                            />
+                            <input 
+                              placeholder="Institution"
+                              value={edu.institution}
+                              onChange={e => {
+                                const newEdu = [...configForm[editLang].education];
+                                newEdu[idx].institution = e.target.value;
+                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
+                              }}
+                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                            />
+                          </div>
+                          <input 
+                            placeholder="Period"
+                            value={edu.period}
+                            onChange={e => {
+                              const newEdu = [...configForm[editLang].education];
+                              newEdu[idx].period = e.target.value;
+                              setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
+                            }}
+                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                          />
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-mono uppercase text-zinc-500">Points</label>
+                            {edu.points.map((point, pIdx) => (
+                              <div key={pIdx} className="flex gap-2">
+                                <input 
+                                  value={point}
+                                  onChange={e => {
+                                    const newEdu = [...configForm[editLang].education];
+                                    newEdu[idx].points[pIdx] = e.target.value;
+                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
+                                  }}
+                                  className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                                />
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const newEdu = [...configForm[editLang].education];
+                                    newEdu[idx].points = newEdu[idx].points.filter((_, i) => i !== pIdx);
+                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
+                                  }}
+                                  className="text-zinc-600 hover:text-red-500"
+                                >
+                                  <Plus size={14} className="rotate-45" />
+                                </button>
+                              </div>
+                            ))}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const newEdu = [...configForm[editLang].education];
+                                newEdu[idx].points.push('');
+                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
+                              }}
+                              className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
+                            >
+                              <Plus size={12} /> Add Point
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const newEdu = { degree: '', institution: '', period: '', points: [''] };
+                          setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: [...configForm[editLang].education, newEdu] } });
+                        }}
+                        className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-zinc-500 hover:border-orange-500/50 hover:text-orange-500 transition-all flex items-center justify-center gap-2 font-mono text-xs uppercase"
+                      >
+                        <Plus size={16} /> Add Education
+                      </button>
+                    </div>
+                  )}
+
+                  {configTab === 'certs' && (
+                    <div className="space-y-6">
+                      {configForm[editLang].certifications.map((cert, idx) => (
+                        <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-4 relative group">
+                          <button 
+                            type="button"
+                            onClick={() => setConfigForm({
+                              ...configForm,
+                              [editLang]: { ...configForm[editLang], certifications: configForm[editLang].certifications.filter((_, i) => i !== idx) }
+                            })}
+                            className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          <div className="grid grid-cols-2 gap-4">
+                            <input 
+                              placeholder="Title"
+                              value={cert.title}
+                              onChange={e => {
+                                const newCerts = [...configForm[editLang].certifications];
+                                newCerts[idx].title = e.target.value;
+                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
+                              }}
+                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                            />
+                            <input 
+                              placeholder="Subtitle"
+                              value={cert.subtitle}
+                              onChange={e => {
+                                const newCerts = [...configForm[editLang].certifications];
+                                newCerts[idx].subtitle = e.target.value;
+                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
+                              }}
+                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                            />
+                          </div>
+                          <input 
+                            placeholder="Period"
+                            value={cert.period}
+                            onChange={e => {
+                              const newCerts = [...configForm[editLang].certifications];
+                              newCerts[idx].period = e.target.value;
+                              setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
+                            }}
+                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                          />
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-mono uppercase text-zinc-500">Points</label>
+                            {cert.points.map((point, pIdx) => (
+                              <div key={pIdx} className="flex gap-2">
+                                <input 
+                                  value={point}
+                                  onChange={e => {
+                                    const newCerts = [...configForm[editLang].certifications];
+                                    newCerts[idx].points[pIdx] = e.target.value;
+                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
+                                  }}
+                                  className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                                />
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const newCerts = [...configForm[editLang].certifications];
+                                    newCerts[idx].points = newCerts[idx].points.filter((_, i) => i !== pIdx);
+                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
+                                  }}
+                                  className="text-zinc-600 hover:text-red-500"
+                                >
+                                  <Plus size={14} className="rotate-45" />
+                                </button>
+                              </div>
+                            ))}
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const newCerts = [...configForm[editLang].certifications];
+                                newCerts[idx].points.push('');
+                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
+                              }}
+                              className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
+                            >
+                              <Plus size={12} /> Add Point
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const newCert = { title: '', subtitle: '', period: '', points: [''] };
+                          setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: [...configForm[editLang].certifications, newCert] } });
+                        }}
+                        className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-zinc-500 hover:border-orange-500/50 hover:text-orange-500 transition-all flex items-center justify-center gap-2 font-mono text-xs uppercase"
+                      >
+                        <Plus size={16} /> Add Certification
+                      </button>
+                    </div>
+                  )}
+
+                  {configTab === 'skills' && (
+                    <div className="space-y-8">
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-mono uppercase text-zinc-400 border-b border-white/5 pb-2">Technical Skills</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {configForm.technicalSkills.map((skill, idx) => (
+                            <div key={idx} className="flex gap-2 items-center bg-black/20 p-2 rounded-lg border border-white/5">
                               <input 
-                                value={point || ''}
+                                placeholder="Name"
+                                value={skill.name}
                                 onChange={e => {
-                                  const newExps = [...configForm[editLang].experiences];
-                                  newExps[i].points[j] = e.target.value;
-                                  setConfigForm({
-                                    ...configForm,
-                                    [editLang]: { ...configForm[editLang], experiences: newExps }
-                                  });
+                                  const newSkills = [...configForm.technicalSkills];
+                                  newSkills[idx].name = e.target.value;
+                                  setConfigForm({ ...configForm, technicalSkills: newSkills });
                                 }}
-                                className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1 text-xs focus:border-orange-500/50 outline-none"
+                                className="flex-1 bg-black/40 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-orange-500/50"
                               />
-                              <button 
-                                type="button"
-                                onClick={() => {
-                                  const newExps = [...configForm[editLang].experiences];
-                                  newExps[i].points = newExps[i].points.filter((_, idx) => idx !== j);
-                                  setConfigForm({
-                                    ...configForm,
-                                    [editLang]: { ...configForm[editLang], experiences: newExps }
-                                  });
+                              <select 
+                                value={skill.level}
+                                onChange={e => {
+                                  const newSkills = [...configForm.technicalSkills];
+                                  newSkills[idx].level = parseInt(e.target.value);
+                                  setConfigForm({ ...configForm, technicalSkills: newSkills });
                                 }}
-                                className="text-red-500/50 hover:text-red-500"
+                                className="bg-black/40 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-orange-500/50 text-white"
                               >
-                                <Plus size={12} className="rotate-45" />
+                                {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v} Stars</option>)}
+                              </select>
+                              <button type="button" onClick={() => setConfigForm({ ...configForm, technicalSkills: configForm.technicalSkills.filter((_, i) => i !== idx) })} className="text-zinc-600 hover:text-red-500">
+                                <Trash2 size={14} />
                               </button>
                             </div>
                           ))}
-                          <button 
-                            type="button"
-                            onClick={() => {
-                              const newExps = [...configForm[editLang].experiences];
-                              newExps[i].points.push('');
-                              setConfigForm({
-                                ...configForm,
-                                [editLang]: { ...configForm[editLang], experiences: newExps }
-                              });
-                            }}
-                            className="text-[9px] font-mono uppercase text-orange-500/70 hover:text-orange-500 flex items-center gap-1"
-                          >
-                            <Plus size={10} />
-                            Add Point
-                          </button>
                         </div>
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            const newExps = configForm[editLang].experiences.filter((_, idx) => idx !== i);
-                            setConfigForm({
-                              ...configForm,
-                              [editLang]: { ...configForm[editLang], experiences: newExps }
-                            });
-                          }}
-                          className="w-full py-1.5 border border-red-500/20 text-red-500/50 hover:bg-red-500/10 hover:text-red-500 rounded-lg text-[10px] uppercase font-mono transition-colors"
-                        >
-                          Remove Experience
+                        <button type="button" onClick={() => setConfigForm({ ...configForm, technicalSkills: [...configForm.technicalSkills, { name: '', level: 3 }] })} className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1">
+                          <Plus size={12} /> Add Tech Skill
                         </button>
                       </div>
-                    ))}
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        const newExps = [...configForm[editLang].experiences, { title: '', company: '', period: '', points: [''] }];
-                        setConfigForm({
-                          ...configForm,
-                          [editLang]: { ...configForm[editLang], experiences: newExps }
-                        });
-                      }}
-                      className="w-full py-3 border border-dashed border-orange-500/20 text-orange-500/50 hover:border-orange-500/50 hover:text-orange-500 rounded-xl text-[10px] uppercase font-mono transition-all flex items-center justify-center gap-2"
-                    >
-                      <Plus size={14} />
-                      Add New Experience
-                    </button>
-                  </div>
-                </div>
 
-                <div className="flex gap-3 pt-4">
-                  <button type="submit" className="flex-1 py-3 bg-orange-500 text-black font-bold rounded-xl text-xs uppercase tracking-widest">Save Site Config</button>
-                  <button type="button" onClick={() => setIsEditingConfig(false)} className="px-6 py-3 border border-white/10 rounded-xl text-xs uppercase tracking-widest">Cancel</button>
-                </div>
-              </form>
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-mono uppercase text-zinc-400 border-b border-white/5 pb-2">Personal Skills ({editLang.toUpperCase()})</h3>
+                        <div className="space-y-4">
+                          {configForm[editLang].personalSkills.map((skill, idx) => (
+                            <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-2 relative">
+                              <button type="button" onClick={() => setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], personalSkills: configForm[editLang].personalSkills.filter((_, i) => i !== idx) } })} className="absolute top-4 right-4 text-zinc-600 hover:text-red-500">
+                                <Trash2 size={14} />
+                              </button>
+                              <input 
+                                placeholder="Skill Name"
+                                value={skill.name}
+                                onChange={e => {
+                                  const newSkills = [...configForm[editLang].personalSkills];
+                                  newSkills[idx].name = e.target.value;
+                                  setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], personalSkills: newSkills } });
+                                }}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                              />
+                              <textarea 
+                                placeholder="Description"
+                                value={skill.description}
+                                onChange={e => {
+                                  const newSkills = [...configForm[editLang].personalSkills];
+                                  newSkills[idx].description = e.target.value;
+                                  setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], personalSkills: newSkills } });
+                                }}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50 resize-none"
+                                rows={2}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <button type="button" onClick={() => setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], personalSkills: [...configForm[editLang].personalSkills, { name: '', description: '' }] } })} className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1">
+                          <Plus size={12} /> Add Personal Skill
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {configTab === 'languages' && (
+                    <div className="space-y-4">
+                      {configForm.languages.map((lang, idx) => (
+                        <div key={idx} className="flex gap-2 items-center bg-black/20 p-2 rounded-lg border border-white/5">
+                          <input 
+                            placeholder="Language Name"
+                            value={lang.name}
+                            onChange={e => {
+                              const newLangs = [...configForm.languages];
+                              newLangs[idx].name = e.target.value;
+                              setConfigForm({ ...configForm, languages: newLangs });
+                            }}
+                            className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                          />
+                          <input 
+                            placeholder="Level (e.g. Native)"
+                            value={lang.level}
+                            onChange={e => {
+                              const newLangs = [...configForm.languages];
+                              newLangs[idx].level = e.target.value;
+                              setConfigForm({ ...configForm, languages: newLangs });
+                            }}
+                            className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                          />
+                          <button type="button" onClick={() => setConfigForm({ ...configForm, languages: configForm.languages.filter((_, i) => i !== idx) })} className="text-zinc-600 hover:text-red-500">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => setConfigForm({ ...configForm, languages: [...configForm.languages, { name: '', level: '' }] })} className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1">
+                        <Plus size={12} /> Add Language
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex gap-4 pt-6 flex-shrink-0 border-t border-white/10">
+                    <button type="button" onClick={() => setIsEditingConfig(false)} className="flex-1 py-3 bg-zinc-800 border border-white/10 rounded-xl text-sm font-mono uppercase tracking-widest hover:bg-zinc-700 transition-all">Cancel</button>
+                    <button type="submit" className="flex-1 py-3 bg-orange-500 text-black rounded-xl text-sm font-mono font-bold uppercase tracking-widest hover:bg-orange-400 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)]">Save Changes</button>
+                  </div>
+                </form>
             </motion.div>
           </div>
         )}
