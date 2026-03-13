@@ -456,6 +456,9 @@ export default function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [lang, setLang] = useState<'en' | 'pt'>('en');
   const [editLang, setEditLang] = useState<'en' | 'pt'>('en');
+  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '', honeypot: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const cvRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
@@ -610,6 +613,38 @@ export default function App() {
       alert("Failed to upload image. Check your Firebase Storage rules.");
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Honeypot check: if the hidden field is filled, it's a bot
+    if (contactForm.honeypot) {
+      console.log("Spam detected via honeypot");
+      setSubmitStatus('success'); // Fake success to mislead the bot
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+
+    try {
+      await addDoc(collection(db, 'messages'), {
+        name: contactForm.name,
+        email: contactForm.email,
+        message: contactForm.message,
+        createdAt: Timestamp.now()
+      });
+      setSubmitStatus('success');
+      setContactForm({ name: '', email: '', message: '', honeypot: '' });
+      setTimeout(() => setSubmitStatus('idle'), 5000);
+    } catch (error) {
+      console.error("Failed to send message", error);
+      setSubmitStatus('error');
+      setTimeout(() => setSubmitStatus('idle'), 5000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -906,12 +941,27 @@ export default function App() {
               </Section>
 
               <Section id="contact" title={lang === 'en' ? "Establish Connection" : "Estabelecer Ligação"} activeSection={activeSection}>
-                <form className="space-y-4">
+                <form onSubmit={handleContactSubmit} className="space-y-4">
+                  {/* Honeypot field - hidden from users */}
+                  <div className="hidden" aria-hidden="true">
+                    <input 
+                      type="text" 
+                      name="website" 
+                      tabIndex={-1} 
+                      autoComplete="off"
+                      value={contactForm.honeypot}
+                      onChange={e => setContactForm({...contactForm, honeypot: e.target.value})}
+                    />
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-mono uppercase text-zinc-500 ml-1">Name</label>
+                      <label className="text-[10px] font-mono uppercase text-zinc-500 ml-1">{lang === 'en' ? 'Name' : 'Nome'}</label>
                       <input 
+                        required
                         type="text" 
+                        value={contactForm.name}
+                        onChange={e => setContactForm({...contactForm, name: e.target.value})}
                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500/50 transition-colors text-white"
                         placeholder="John Doe"
                       />
@@ -919,22 +969,46 @@ export default function App() {
                     <div className="space-y-1">
                       <label className="text-[10px] font-mono uppercase text-zinc-500 ml-1">Email</label>
                       <input 
+                        required
                         type="email" 
+                        value={contactForm.email}
+                        onChange={e => setContactForm({...contactForm, email: e.target.value})}
                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500/50 transition-colors text-white"
                         placeholder="john@example.com"
                       />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-mono uppercase text-zinc-500 ml-1">Message</label>
+                    <label className="text-[10px] font-mono uppercase text-zinc-500 ml-1">{lang === 'en' ? 'Message' : 'Mensagem'}</label>
                     <textarea 
+                      required
                       rows={4}
+                      value={contactForm.message}
+                      onChange={e => setContactForm({...contactForm, message: e.target.value})}
                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500/50 transition-colors text-white resize-none"
-                      placeholder="Type your message here..."
+                      placeholder={lang === 'en' ? "Type your message here..." : "Escreva a sua mensagem aqui..."}
                     />
                   </div>
-                  <button className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-all active:scale-[0.98] uppercase tracking-widest text-sm">
-                    Send Message
+                  
+                  <button 
+                    disabled={isSubmitting}
+                    className={`w-full py-4 font-bold rounded-xl transition-all active:scale-[0.98] uppercase tracking-widest text-sm flex items-center justify-center gap-2 ${
+                      submitStatus === 'success' 
+                        ? 'bg-green-500 text-white' 
+                        : submitStatus === 'error'
+                        ? 'bg-red-500 text-white'
+                        : 'bg-white text-black hover:bg-zinc-200'
+                    }`}
+                  >
+                    {isSubmitting ? (
+                      <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                    ) : submitStatus === 'success' ? (
+                      lang === 'en' ? 'Message Sent!' : 'Mensagem Enviada!'
+                    ) : submitStatus === 'error' ? (
+                      lang === 'en' ? 'Failed to Send' : 'Falha ao Enviar'
+                    ) : (
+                      lang === 'en' ? 'Send Message' : 'Enviar Mensagem'
+                    )}
                   </button>
                 </form>
 

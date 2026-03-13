@@ -19,6 +19,13 @@ service cloud.firestore {
     //   - email: string (required)
     //   - role: string (required)
     //
+    // Collection: messages
+    // Fields:
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - message: string (required)
+    //   - createdAt: timestamp (required)
+    //
     // ===============================================================
 
     // Helper Functions
@@ -32,11 +39,23 @@ service cloud.firestore {
          (request.auth.token.email == "dan.kachkyy@gmail.com" && request.auth.token.email_verified == true));
     }
 
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
     function isValidProject(data) {
       return data.keys().hasAll(['title', 'description', 'tags', 'createdAt']) &&
              data.title is string && data.title.size() > 0 && data.title.size() < 100 &&
              data.description is string && data.description.size() > 0 && data.description.size() < 1000 &&
              data.tags is list &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['name', 'email', 'message', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string && isValidEmail(data.email) &&
+             data.message is string && data.message.size() > 0 && data.message.size() < 2000 &&
              data.createdAt is timestamp;
     }
 
@@ -56,6 +75,12 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       allow write: if isAdmin();
+    }
+
+    // Messages: Anyone can create (with validation), only admin can read
+    match /messages/{messageId} {
+      allow create: if isValidMessage(request.resource.data);
+      allow read, delete: if isAdmin();
     }
   }
 }

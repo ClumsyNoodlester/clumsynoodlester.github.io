@@ -108,6 +108,18 @@
         }
       }
     }
+    "Message": {
+      "title": "Message",
+      "description": "A contact form message.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "message", "createdAt"]
+    }
   },
   "firestore": {
     "/projects/{projectId}": {
@@ -121,6 +133,10 @@
     "/config/{configId}": {
       "schema": "SiteConfig",
       "description": "Global site configuration."
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Contact form submissions."
     }
   }
 }
