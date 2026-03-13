@@ -704,6 +704,15 @@ export default function App() {
     contentRef: cvRef,
     documentTitle: `Daniil_Kachkovskyy_CV_${lang.toUpperCase()}`,
   });
+
+  const onDownloadCV = () => {
+    if (cvRef.current) {
+      // Small delay to ensure DOM stability and ref attachment
+      setTimeout(() => {
+        handlePrint();
+      }, 50);
+    }
+  };
   
   // Form State
   const [newProject, setNewProject] = useState({ title: '', description: '', tags: '', link: '' });
@@ -1210,7 +1219,7 @@ export default function App() {
 
                   <div className="pt-6">
                     <button 
-                      onClick={() => handlePrint()}
+                      onClick={onDownloadCV}
                       className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-400 transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(249,115,22,0.3)]"
                     >
                       <Download size={18} />
@@ -2038,10 +2047,18 @@ export default function App() {
       </div>
 
       {/* Hidden CV for printing - using a more robust method for iframe environments */}
-      <div className="fixed opacity-0 pointer-events-none overflow-hidden" style={{ left: '-10000px', top: '-10000px', width: '210mm', height: '297mm' }}>
-        <div ref={cvRef}>
-          <CV config={siteConfig} lang={lang} />
-        </div>
+      <div 
+        className="fixed pointer-events-none overflow-hidden" 
+        style={{ 
+          left: '-10000px', 
+          top: '-10000px', 
+          width: '210mm', 
+          height: '297mm', 
+          opacity: 0,
+          zIndex: -1
+        }}
+      >
+        <CV ref={cvRef} config={siteConfig} lang={lang} />
       </div>
     </div>
   );
