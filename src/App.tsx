@@ -1309,11 +1309,6 @@ export default function App() {
 
       </main>
 
-      {/* Hidden CV for printing */}
-      <div className="hidden">
-        <CV ref={cvRef} config={siteConfig} lang={lang} />
-      </div>
-
       {/* Modals */}
       <AnimatePresence>
         {editingProject && (
@@ -2037,8 +2032,10 @@ export default function App() {
       </div>
 
       {/* Hidden CV for printing - using a more robust method for iframe environments */}
-      <div className="fixed opacity-0 pointer-events-none" style={{ left: '-10000px', top: '-10000px', width: '210mm', height: '297mm' }}>
-        <CV ref={cvRef} config={siteConfig} lang={lang} />
+      <div className="fixed opacity-0 pointer-events-none overflow-hidden" style={{ left: '-10000px', top: '-10000px', width: '210mm', height: '297mm' }}>
+        <div ref={cvRef}>
+          <CV config={siteConfig} lang={lang} />
+        </div>
       </div>
     </div>
   );

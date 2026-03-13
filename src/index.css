@@ -30,3 +30,13 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-orange-500/50;
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  body {
+    background: white;
+  }
+}
