@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { GoogleGenAI } from "@google/genai";
 import { 
   Github, 
   Linkedin, 
@@ -29,7 +30,8 @@ import {
   Star,
   GraduationCap,
   Award,
-  BookOpen
+  BookOpen,
+  Sparkles
 } from 'lucide-react';
 import { 
   auth, 
@@ -72,6 +74,8 @@ interface Message {
   email: string;
   message: string;
   createdAt: any;
+  reply?: string;
+  repliedAt?: any;
 }
 
 interface Language {
@@ -728,6 +732,9 @@ export default function App() {
   const [editLang, setEditLang] = useState<'en' | 'pt'>('en');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isViewingMessages, setIsViewingMessages] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [isSendingReply, setIsSendingReply] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '', honeypot: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -736,9 +743,7 @@ export default function App() {
   const handlePrint = useReactToPrint({
     contentRef: cvRef,
     documentTitle: `Daniil_Kachkovskyy_CV_${lang.toUpperCase()}`,
-    onAfterPrint: () => {
-      if (isPrintMode) window.close();
-    },
+    onAfterPrint: () => console.log("Print completed"),
     onPrintError: (error) => console.error("Print error:", error),
   });
 
@@ -919,6 +924,53 @@ export default function App() {
       await deleteDoc(doc(db, 'messages', id));
     } catch (error) {
       console.error("Failed to delete message", error);
+    }
+  };
+
+  const handleSendReply = async (msgId: string, email: string) => {
+    if (!replyText.trim() || !isAdmin) return;
+    setIsSendingReply(true);
+    try {
+      // 1. Update Firestore
+      await updateDoc(doc(db, 'messages', msgId), {
+        reply: replyText,
+        repliedAt: Timestamp.now()
+      });
+
+      // 2. Call Backend API to "send" email
+      const response = await fetch(`/api/messages/${msgId}/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, replyText })
+      });
+
+      if (!response.ok) throw new Error("Failed to send email via backend");
+
+      setReplyingTo(null);
+      setReplyText('');
+    } catch (error) {
+      console.error("Reply error:", error);
+      alert("Failed to send reply. Check console for details.");
+    } finally {
+      setIsSendingReply(false);
+    }
+  };
+
+  const handleDraftWithAI = async (msg: Message) => {
+    if (!isAdmin) return;
+    setIsSendingReply(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: `Draft a professional, friendly, and concise email response to this message from ${msg.name}: "${msg.message}". The response should be from Daniil Kachkovskyy. Keep it under 100 words.`,
+      });
+      setReplyText(response.text || '');
+    } catch (error) {
+      console.error("AI Draft error:", error);
+      alert("Failed to generate AI draft.");
+    } finally {
+      setIsSendingReply(false);
     }
   };
 
@@ -2076,7 +2128,64 @@ export default function App() {
                           </button>
                         </div>
                       </div>
-                      <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                      <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap mb-4">{msg.message}</p>
+                      
+                      {msg.reply ? (
+                        <div className="mt-4 p-4 bg-orange-500/5 border border-orange-500/20 rounded-xl">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-[10px] font-mono text-orange-500 uppercase tracking-widest font-bold">Your Reply</span>
+                            <span className="text-[8px] font-mono text-zinc-600 uppercase">
+                              {msg.repliedAt?.toDate ? msg.repliedAt.toDate().toLocaleString() : 'Just now'}
+                            </span>
+                          </div>
+                          <p className="text-zinc-300 text-sm italic">"{msg.reply}"</p>
+                        </div>
+                      ) : (
+                        <div className="mt-4">
+                          {replyingTo === msg.id ? (
+                            <div className="space-y-3">
+                              <textarea
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                                placeholder="Type your response..."
+                                className="w-full bg-black/60 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-orange-500/50 min-h-[100px] resize-none"
+                              />
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  onClick={() => handleDraftWithAI(msg)}
+                                  disabled={isSendingReply}
+                                  className="px-4 py-2 bg-zinc-800 text-orange-500 border border-orange-500/20 rounded-lg text-[10px] font-mono uppercase tracking-widest hover:bg-orange-500/10 transition-all disabled:opacity-50 flex items-center gap-2"
+                                >
+                                  <Sparkles size={12} /> Draft with AI
+                                </button>
+                                <button
+                                  onClick={() => handleSendReply(msg.id, msg.email)}
+                                  disabled={isSendingReply || !replyText.trim()}
+                                  className="flex-1 py-2 bg-orange-500 text-black rounded-lg text-xs font-mono font-bold uppercase tracking-widest hover:bg-orange-400 transition-all disabled:opacity-50"
+                                >
+                                  {isSendingReply ? 'Processing...' : 'Save & Send Reply'}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setReplyingTo(null);
+                                    setReplyText('');
+                                  }}
+                                  className="px-4 py-2 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-mono uppercase tracking-widest hover:text-white transition-all"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setReplyingTo(msg.id)}
+                              className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-2 transition-colors"
+                            >
+                              <Mail size={12} /> Reply to Message
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
