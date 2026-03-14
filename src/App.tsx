@@ -5,7 +5,6 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { GoogleGenAI } from "@google/genai";
 import { 
   Github, 
   Linkedin, 
@@ -30,8 +29,7 @@ import {
   Star,
   GraduationCap,
   Award,
-  BookOpen,
-  Sparkles
+  BookOpen
 } from 'lucide-react';
 import { 
   auth, 
@@ -74,8 +72,6 @@ interface Message {
   email: string;
   message: string;
   createdAt: any;
-  reply?: string;
-  repliedAt?: any;
 }
 
 interface Language {
@@ -123,6 +119,12 @@ interface ContactInfo {
   website: string;
 }
 
+interface IntroCard {
+  title: string;
+  description: string;
+  icon: string;
+}
+
 interface LanguageData {
   fullName: string;
   introText: string;
@@ -135,6 +137,7 @@ interface LanguageData {
   education: Education[];
   certifications: Certification[];
   personalSkills: PersonalSkill[];
+  introCards: IntroCard[];
 }
 
 interface SiteConfig {
@@ -190,6 +193,18 @@ const DEFAULT_CONFIG: SiteConfig = {
       { name: "Sense of responsibility and organization", description: "Responsible for coordinating the checkout team" },
       { name: "Good communication and teamwork skills", description: "Collaboration with different sales areas within the store" },
       { name: "Customer Service", description: "Creating bonds of trust with customers as a checkout operator" }
+    ],
+    introCards: [
+      {
+        title: "Future Focus",
+        description: "Aspiring to design stable, scalable, and high-performance infrastructures.",
+        icon: "Cpu"
+      },
+      {
+        title: "System Management",
+        description: "Learning to manage and optimize complex server environments and networks.",
+        icon: "Terminal"
+      }
     ]
   },
   pt: {
@@ -235,6 +250,18 @@ const DEFAULT_CONFIG: SiteConfig = {
       { name: "Sentido de responsabilidade e organização", description: "Responsável pela coordenação da equipa das caixas" },
       { name: "Boa capacidade de comunicação e trabalho em equipa", description: "Colaboração com as diferentes áreas de venda dentro da loja" },
       { name: "Atendimento ao Público", description: "Criando laços de confiança com os clientes como operador de caixa" }
+    ],
+    introCards: [
+      {
+        title: "Foco Futuro",
+        description: "Aspirando a projetar infraestruturas estáveis, escaláveis e de alto desempenho.",
+        icon: "Cpu"
+      },
+      {
+        title: "Gestão de Sistemas",
+        description: "Aprendendo a gerir e otimizar ambientes de servidores e redes complexos.",
+        icon: "Terminal"
+      }
     ]
   },
   profileImage: "https://picsum.photos/seed/daniil/400/400",
@@ -714,6 +741,14 @@ const NavItem = ({ id, label, icon: Icon, activeSection, onClick }: { id: string
 
 // --- Main App ---
 
+const getIcon = (name: string) => {
+  const icons: Record<string, any> = {
+    Cpu, Terminal, Shield, UserIcon, Briefcase, Code2, Globe, Star, GraduationCap, Award, BookOpen, Mail, Github, Linkedin
+  };
+  const Icon = icons[name] || Cpu;
+  return <Icon className="text-orange-500 mb-2" size={20} />;
+};
+
 export default function App() {
   const isPrintMode = useMemo(() => new URLSearchParams(window.location.search).get('print') === 'true', []);
   const printLang = useMemo(() => (new URLSearchParams(window.location.search).get('lang') as 'en' | 'pt') || 'en', []);
@@ -726,15 +761,12 @@ export default function App() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [siteConfig, setSiteConfig] = useState<SiteConfig>(DEFAULT_CONFIG);
   const [isEditingConfig, setIsEditingConfig] = useState(false);
-  const [configTab, setConfigTab] = useState<'basic' | 'contacts' | 'experience' | 'education' | 'certs' | 'skills' | 'languages'>('basic');
+  const [configTab, setConfigTab] = useState<'basic' | 'contacts' | 'intro' | 'experience' | 'education' | 'certs' | 'skills' | 'languages'>('basic');
   const [isUploading, setIsUploading] = useState(false);
   const [lang, setLang] = useState<'en' | 'pt'>(isPrintMode ? printLang : 'en');
   const [editLang, setEditLang] = useState<'en' | 'pt'>('en');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isViewingMessages, setIsViewingMessages] = useState(false);
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
-  const [isSendingReply, setIsSendingReply] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '', honeypot: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -787,43 +819,37 @@ export default function App() {
     const unsubscribeConfig = onSnapshot(doc(db, 'config', 'main'), (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data() as any;
-        // Check if it's the new structure with 'en' and 'pt' and 'contacts'
-        if (data.en && data.pt && data.contacts) {
-          setSiteConfig(data as SiteConfig);
-          setConfigForm(data as SiteConfig);
-        } else {
-          // Old structure - migrate it to the new format
-          const migrated: SiteConfig = {
-            ...DEFAULT_CONFIG,
-            en: {
-              ...DEFAULT_CONFIG.en,
-              fullName: data.en?.fullName || data.fullName || DEFAULT_CONFIG.en.fullName,
-              introText: data.en?.introText || data.introText || DEFAULT_CONFIG.en.introText,
-              jobTitle: data.en?.jobTitle || data.jobTitle || DEFAULT_CONFIG.en.jobTitle,
-              statusLine: data.en?.statusLine || data.statusLine || DEFAULT_CONFIG.en.statusLine,
-              bio: data.en?.bio || data.bio || DEFAULT_CONFIG.en.bio,
-              profileText: data.en?.profileText || data.profileText || DEFAULT_CONFIG.en.profileText,
-              experiences: data.en?.experiences || data.experiences || DEFAULT_CONFIG.en.experiences,
-            },
-            pt: {
-              ...DEFAULT_CONFIG.pt,
-              fullName: data.pt?.fullName || DEFAULT_CONFIG.pt.fullName,
-              introText: data.pt?.introText || DEFAULT_CONFIG.pt.introText,
-              jobTitle: data.pt?.jobTitle || DEFAULT_CONFIG.pt.jobTitle,
-              statusLine: data.pt?.statusLine || DEFAULT_CONFIG.pt.statusLine,
-              bio: data.pt?.bio || DEFAULT_CONFIG.pt.bio,
-              profileText: data.pt?.profileText || DEFAULT_CONFIG.pt.profileText,
-              experiences: data.pt?.experiences || DEFAULT_CONFIG.pt.experiences,
-            },
-            profileImage: data.profileImage || DEFAULT_CONFIG.profileImage,
-            contacts: data.contacts || DEFAULT_CONFIG.contacts,
-            technicalSkills: data.technicalSkills || DEFAULT_CONFIG.technicalSkills,
-            languages: data.languages || DEFAULT_CONFIG.languages,
-          };
-          setSiteConfig(migrated);
-          setConfigForm(migrated);
-          if (isPrintMode) setIsLoading(false);
+        
+        // Robust merging with DEFAULT_CONFIG to ensure all fields exist
+        const merged: SiteConfig = {
+          ...DEFAULT_CONFIG,
+          ...data,
+          en: {
+            ...DEFAULT_CONFIG.en,
+            ...(data.en || {}),
+            introCards: data.en?.introCards || DEFAULT_CONFIG.en.introCards
+          },
+          pt: {
+            ...DEFAULT_CONFIG.pt,
+            ...(data.pt || {}),
+            introCards: data.pt?.introCards || DEFAULT_CONFIG.pt.introCards
+          }
+        };
+
+        // Handle legacy structure migration if necessary
+        if (!data.en && !data.pt) {
+          merged.en.fullName = data.fullName || DEFAULT_CONFIG.en.fullName;
+          merged.en.introText = data.introText || DEFAULT_CONFIG.en.introText;
+          merged.en.jobTitle = data.jobTitle || DEFAULT_CONFIG.en.jobTitle;
+          merged.en.statusLine = data.statusLine || DEFAULT_CONFIG.en.statusLine;
+          merged.en.bio = data.bio || DEFAULT_CONFIG.en.bio;
+          merged.en.profileText = data.profileText || DEFAULT_CONFIG.en.profileText;
+          merged.en.experiences = data.experiences || DEFAULT_CONFIG.en.experiences;
         }
+
+        setSiteConfig(merged);
+        setConfigForm(merged);
+        if (isPrintMode) setIsLoading(false);
       }
     });
 
@@ -924,53 +950,6 @@ export default function App() {
       await deleteDoc(doc(db, 'messages', id));
     } catch (error) {
       console.error("Failed to delete message", error);
-    }
-  };
-
-  const handleSendReply = async (msgId: string, email: string) => {
-    if (!replyText.trim() || !isAdmin) return;
-    setIsSendingReply(true);
-    try {
-      // 1. Update Firestore
-      await updateDoc(doc(db, 'messages', msgId), {
-        reply: replyText,
-        repliedAt: Timestamp.now()
-      });
-
-      // 2. Call Backend API to "send" email
-      const response = await fetch(`/api/messages/${msgId}/reply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, replyText })
-      });
-
-      if (!response.ok) throw new Error("Failed to send email via backend");
-
-      setReplyingTo(null);
-      setReplyText('');
-    } catch (error) {
-      console.error("Reply error:", error);
-      alert("Failed to send reply. Check console for details.");
-    } finally {
-      setIsSendingReply(false);
-    }
-  };
-
-  const handleDraftWithAI = async (msg: Message) => {
-    if (!isAdmin) return;
-    setIsSendingReply(true);
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `Draft a professional, friendly, and concise email response to this message from ${msg.name}: "${msg.message}". The response should be from Daniil Kachkovskyy. Keep it under 100 words.`,
-      });
-      setReplyText(response.text || '');
-    } catch (error) {
-      console.error("AI Draft error:", error);
-      alert("Failed to generate AI draft.");
-    } finally {
-      setIsSendingReply(false);
     }
   };
 
@@ -1167,16 +1146,13 @@ export default function App() {
                     {siteConfig[lang].bio}
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-orange-500/30 transition-colors">
-                      <Cpu className="text-orange-500 mb-2" size={20} />
-                      <h4 className="text-white font-mono text-sm uppercase mb-1">{lang === 'en' ? 'Future Focus' : 'Foco Futuro'}</h4>
-                      <p className="text-xs text-zinc-500">{lang === 'en' ? 'Aspiring to design stable, scalable, and high-performance infrastructures.' : 'Aspirando a projetar infraestruturas estáveis, escaláveis e de alto desempenho.'}</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-orange-500/30 transition-colors">
-                      <Terminal className="text-orange-500 mb-2" size={20} />
-                      <h4 className="text-white font-mono text-sm uppercase mb-1">{lang === 'en' ? 'System Management' : 'Gestão de Sistemas'}</h4>
-                      <p className="text-xs text-zinc-500">{lang === 'en' ? 'Learning to manage and optimize complex server environments and networks.' : 'Aprendendo a gerir e otimizar ambientes de servidores e redes complexos.'}</p>
-                    </div>
+                    {(siteConfig[lang].introCards || []).map((card, idx) => (
+                      <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-orange-500/30 transition-colors">
+                        {getIcon(card.icon)}
+                        <h4 className="text-white font-mono text-sm uppercase mb-1">{card.title}</h4>
+                        <p className="text-xs text-zinc-500">{card.description}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </Section>
@@ -1521,6 +1497,7 @@ export default function App() {
                   {[
                     { id: 'basic', label: 'Basic', icon: UserIcon },
                     { id: 'contacts', label: 'Contacts', icon: Phone },
+                    { id: 'intro', label: 'Intro Cards', icon: Cpu },
                     { id: 'experience', label: 'Experience', icon: Briefcase },
                     { id: 'education', label: 'Education', icon: GraduationCap },
                     { id: 'certs', label: 'Certs', icon: Award },
@@ -1658,6 +1635,86 @@ export default function App() {
                           />
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {configTab === 'intro' && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 gap-4">
+                        {(configForm[editLang].introCards || []).map((card, idx) => (
+                          <div key={idx} className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-4 relative">
+                            <button 
+                              type="button" 
+                              onClick={() => setConfigForm({
+                                ...configForm,
+                                [editLang]: {
+                                  ...configForm[editLang],
+                                  introCards: configForm[editLang].introCards.filter((_, i) => i !== idx)
+                                }
+                              })}
+                              className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-mono uppercase text-zinc-500">Title</label>
+                                <input 
+                                  value={card.title}
+                                  onChange={e => {
+                                    const newCards = [...configForm[editLang].introCards];
+                                    newCards[idx].title = e.target.value;
+                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], introCards: newCards } });
+                                  }}
+                                  className="w-full bg-black/20 border border-white/5 rounded-lg px-3 py-2 text-sm focus:border-orange-500/50 outline-none"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-mono uppercase text-zinc-500">Icon</label>
+                                <select 
+                                  value={card.icon}
+                                  onChange={e => {
+                                    const newCards = [...configForm[editLang].introCards];
+                                    newCards[idx].icon = e.target.value;
+                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], introCards: newCards } });
+                                  }}
+                                  className="w-full bg-black/20 border border-white/5 rounded-lg px-3 py-2 text-sm focus:border-orange-500/50 outline-none"
+                                >
+                                  {['Cpu', 'Terminal', 'Shield', 'UserIcon', 'Briefcase', 'Code2', 'Globe', 'Star', 'GraduationCap', 'Award', 'BookOpen', 'Mail', 'Github', 'Linkedin'].map(icon => (
+                                    <option key={icon} value={icon}>{icon}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-mono uppercase text-zinc-500">Description</label>
+                              <textarea 
+                                value={card.description}
+                                onChange={e => {
+                                  const newCards = [...configForm[editLang].introCards];
+                                  newCards[idx].description = e.target.value;
+                                  setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], introCards: newCards } });
+                                }}
+                                className="w-full bg-black/20 border border-white/5 rounded-lg px-3 py-2 text-sm focus:border-orange-500/50 outline-none resize-none"
+                                rows={2}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setConfigForm({
+                          ...configForm,
+                          [editLang]: {
+                            ...configForm[editLang],
+                            introCards: [...configForm[editLang].introCards, { title: '', description: '', icon: 'Cpu' }]
+                          }
+                        })}
+                        className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
+                      >
+                        <Plus size={14} /> Add Card
+                      </button>
                     </div>
                   )}
 
@@ -2128,64 +2185,7 @@ export default function App() {
                           </button>
                         </div>
                       </div>
-                      <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap mb-4">{msg.message}</p>
-                      
-                      {msg.reply ? (
-                        <div className="mt-4 p-4 bg-orange-500/5 border border-orange-500/20 rounded-xl">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-[10px] font-mono text-orange-500 uppercase tracking-widest font-bold">Your Reply</span>
-                            <span className="text-[8px] font-mono text-zinc-600 uppercase">
-                              {msg.repliedAt?.toDate ? msg.repliedAt.toDate().toLocaleString() : 'Just now'}
-                            </span>
-                          </div>
-                          <p className="text-zinc-300 text-sm italic">"{msg.reply}"</p>
-                        </div>
-                      ) : (
-                        <div className="mt-4">
-                          {replyingTo === msg.id ? (
-                            <div className="space-y-3">
-                              <textarea
-                                value={replyText}
-                                onChange={(e) => setReplyText(e.target.value)}
-                                placeholder="Type your response..."
-                                className="w-full bg-black/60 border border-white/10 rounded-xl p-4 text-sm text-white outline-none focus:border-orange-500/50 min-h-[100px] resize-none"
-                              />
-                              <div className="flex flex-wrap gap-2">
-                                <button
-                                  onClick={() => handleDraftWithAI(msg)}
-                                  disabled={isSendingReply}
-                                  className="px-4 py-2 bg-zinc-800 text-orange-500 border border-orange-500/20 rounded-lg text-[10px] font-mono uppercase tracking-widest hover:bg-orange-500/10 transition-all disabled:opacity-50 flex items-center gap-2"
-                                >
-                                  <Sparkles size={12} /> Draft with AI
-                                </button>
-                                <button
-                                  onClick={() => handleSendReply(msg.id, msg.email)}
-                                  disabled={isSendingReply || !replyText.trim()}
-                                  className="flex-1 py-2 bg-orange-500 text-black rounded-lg text-xs font-mono font-bold uppercase tracking-widest hover:bg-orange-400 transition-all disabled:opacity-50"
-                                >
-                                  {isSendingReply ? 'Processing...' : 'Save & Send Reply'}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setReplyingTo(null);
-                                    setReplyText('');
-                                  }}
-                                  className="px-4 py-2 bg-zinc-800 text-zinc-400 rounded-lg text-xs font-mono uppercase tracking-widest hover:text-white transition-all"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setReplyingTo(msg.id)}
-                              className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-2 transition-colors"
-                            >
-                              <Mail size={12} /> Reply to Message
-                            </button>
-                          )}
-                        </div>
-                      )}
+                      <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
                     </div>
                   ))
                 )}

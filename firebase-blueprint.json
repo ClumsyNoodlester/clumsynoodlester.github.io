@@ -54,6 +54,18 @@
       "description": "Global site settings and content.",
       "type": "object",
       "properties": {
+        "introCards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "icon": { "type": "string" }
+            }
+          },
+          "description": "Cards displayed in the intro section (e.g., Future Focus)."
+        },
         "introText": {
           "type": "string",
           "description": "The short introduction text on the home page."
