@@ -2284,7 +2284,7 @@ export default function App() {
                                   value={card.title}
                                   onChange={e => {
                                     const newCards = [...configForm[editLang].introCards];
-                                    newCards[idx].title = e.target.value;
+                                    newCards[idx] = { ...newCards[idx], title: e.target.value };
                                     setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], introCards: newCards } });
                                   }}
                                   className="w-full bg-black/20 border border-white/5 rounded-lg px-3 py-2 text-sm focus:border-orange-500/50 outline-none"
@@ -2299,8 +2299,8 @@ export default function App() {
                                     // Icon is synchronized across both languages
                                     const newEn = [...(configForm.en.introCards || [])];
                                     const newPt = [...(configForm.pt.introCards || [])];
-                                    if (newEn[idx]) newEn[idx].icon = val;
-                                    if (newPt[idx]) newPt[idx].icon = val;
+                                    if (newEn[idx]) newEn[idx] = { ...newEn[idx], icon: val };
+                                    if (newPt[idx]) newPt[idx] = { ...newPt[idx], icon: val };
                                     setConfigForm({
                                       ...configForm,
                                       en: { ...configForm.en, introCards: newEn },
@@ -2321,7 +2321,7 @@ export default function App() {
                                 value={card.description}
                                 onChange={e => {
                                   const newCards = [...configForm[editLang].introCards];
-                                  newCards[idx].description = e.target.value;
+                                  newCards[idx] = { ...newCards[idx], description: e.target.value };
                                   setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], introCards: newCards } });
                                 }}
                                 className="w-full bg-black/20 border border-white/5 rounded-lg px-3 py-2 text-sm focus:border-orange-500/50 outline-none resize-none"
@@ -2402,7 +2402,7 @@ export default function App() {
                                   value={exp.title}
                                   onChange={e => {
                                     const newExps = [...configForm[editLang].experiences];
-                                    newExps[idx].title = e.target.value;
+                                    newExps[idx] = { ...newExps[idx], title: e.target.value };
                                     setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
                                   }}
                                   className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
@@ -2417,8 +2417,8 @@ export default function App() {
                                     const val = e.target.value;
                                     const newEn = [...(configForm.en.experiences || [])];
                                     const newPt = [...(configForm.pt.experiences || [])];
-                                    if (newEn[idx]) newEn[idx].company = val;
-                                    if (newPt[idx]) newPt[idx].company = val;
+                                    if (newEn[idx]) newEn[idx] = { ...newEn[idx], company: val };
+                                    if (newPt[idx]) newPt[idx] = { ...newPt[idx], company: val };
                                     setConfigForm({
                                       ...configForm,
                                       en: { ...configForm.en, experiences: newEn },
@@ -2537,7 +2537,9 @@ export default function App() {
                                     value={point}
                                     onChange={e => {
                                       const newExps = [...configForm[editLang].experiences];
-                                      newExps[idx].points[pIdx] = e.target.value;
+                                      const newPoints = [...newExps[idx].points];
+                                      newPoints[pIdx] = e.target.value;
+                                      newExps[idx] = { ...newExps[idx], points: newPoints };
                                       setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
                                     }}
                                     className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
@@ -2689,7 +2691,7 @@ export default function App() {
                                   value={edu.degree}
                                   onChange={e => {
                                     const newEdu = [...configForm[editLang].education];
-                                    newEdu[idx].degree = e.target.value;
+                                    newEdu[idx] = { ...newEdu[idx], degree: e.target.value };
                                     setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
                                   }}
                                   className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
@@ -2704,8 +2706,8 @@ export default function App() {
                                     const val = e.target.value;
                                     const newEn = [...(configForm.en.education || [])];
                                     const newPt = [...(configForm.pt.education || [])];
-                                    if (newEn[idx]) newEn[idx].institution = val;
-                                    if (newPt[idx]) newPt[idx].institution = val;
+                                    if (newEn[idx]) newEn[idx] = { ...newEn[idx], institution: val };
+                                    if (newPt[idx]) newPt[idx] = { ...newPt[idx], institution: val };
                                     setConfigForm({
                                       ...configForm,
                                       en: { ...configForm.en, education: newEn },
@@ -2824,7 +2826,9 @@ export default function App() {
                                     value={point}
                                     onChange={e => {
                                       const newEdu = [...configForm[editLang].education];
-                                      newEdu[idx].points[pIdx] = e.target.value;
+                                      const newPoints = [...newEdu[idx].points];
+                                      newPoints[pIdx] = e.target.value;
+                                      newEdu[idx] = { ...newEdu[idx], points: newPoints };
                                       setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
                                     }}
                                     className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
@@ -2974,7 +2978,7 @@ export default function App() {
                                 value={cert.title}
                                 onChange={e => {
                                   const newCerts = [...configForm[editLang].certifications];
-                                  newCerts[idx].title = e.target.value;
+                                  newCerts[idx] = { ...newCerts[idx], title: e.target.value };
                                   setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
                                 }}
                                 className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
@@ -2989,8 +2993,8 @@ export default function App() {
                                   const val = e.target.value;
                                   const newEn = [...(configForm.en.certifications || [])];
                                   const newPt = [...(configForm.pt.certifications || [])];
-                                  if (newEn[idx]) newEn[idx].subtitle = val;
-                                  if (newPt[idx]) newPt[idx].subtitle = val;
+                                  if (newEn[idx]) newEn[idx] = { ...newEn[idx], subtitle: val };
+                                  if (newPt[idx]) newPt[idx] = { ...newPt[idx], subtitle: val };
                                   setConfigForm({
                                     ...configForm,
                                     en: { ...configForm.en, certifications: newEn },
@@ -3004,36 +3008,38 @@ export default function App() {
                           <div className="space-y-1">
                             <label className="text-[10px] font-mono uppercase text-zinc-500">Period (Shared)</label>
                             <input 
-                              placeholder="Period"
-                              value={cert.period}
-                              onChange={e => {
-                                const val = e.target.value;
-                                const newEn = [...(configForm.en.certifications || [])];
-                                const newPt = [...(configForm.pt.certifications || [])];
-                                if (newEn[idx]) newEn[idx].period = val;
-                                if (newPt[idx]) newPt[idx].period = val;
-                                setConfigForm({
-                                  ...configForm,
-                                  en: { ...configForm.en, certifications: newEn },
-                                  pt: { ...configForm.pt, certifications: newPt }
-                                });
-                              }}
-                              className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-mono uppercase text-zinc-500">Points</label>
-                            {cert.points.map((point, pIdx) => (
-                              <div key={pIdx} className="flex gap-2">
-                                <input 
-                                  value={point}
-                                  onChange={e => {
-                                    const newCerts = [...configForm[editLang].certifications];
-                                    newCerts[idx].points[pIdx] = e.target.value;
-                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
-                                  }}
-                                  className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                                />
+                                placeholder="Period"
+                                value={cert.period}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  const newEn = [...(configForm.en.certifications || [])];
+                                  const newPt = [...(configForm.pt.certifications || [])];
+                                  if (newEn[idx]) newEn[idx] = { ...newEn[idx], period: val };
+                                  if (newPt[idx]) newPt[idx] = { ...newPt[idx], period: val };
+                                  setConfigForm({
+                                    ...configForm,
+                                    en: { ...configForm.en, certifications: newEn },
+                                    pt: { ...configForm.pt, certifications: newPt }
+                                  });
+                                }}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-500">Points</label>
+                              {cert.points.map((point, pIdx) => (
+                                <div key={pIdx} className="flex gap-2">
+                                  <input 
+                                    value={point}
+                                    onChange={e => {
+                                      const newCerts = [...configForm[editLang].certifications];
+                                      const newPoints = [...newCerts[idx].points];
+                                      newPoints[pIdx] = e.target.value;
+                                      newCerts[idx] = { ...newCerts[idx], points: newPoints };
+                                      setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
+                                    }}
+                                    className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                                  />
                                 <button 
                                   type="button"
                                   onClick={() => {
@@ -3107,7 +3113,7 @@ export default function App() {
                                 value={skill.name}
                                 onChange={e => {
                                   const newSkills = [...configForm.technicalSkills];
-                                  newSkills[idx].name = e.target.value;
+                                  newSkills[idx] = { ...newSkills[idx], name: e.target.value };
                                   setConfigForm({ ...configForm, technicalSkills: newSkills });
                                 }}
                                 className="flex-1 bg-black/40 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-orange-500/50"
@@ -3116,7 +3122,7 @@ export default function App() {
                                 value={skill.level}
                                 onChange={e => {
                                   const newSkills = [...configForm.technicalSkills];
-                                  newSkills[idx].level = parseInt(e.target.value);
+                                  newSkills[idx] = { ...newSkills[idx], level: parseInt(e.target.value) };
                                   setConfigForm({ ...configForm, technicalSkills: newSkills });
                                 }}
                                 className="bg-black/40 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-orange-500/50 text-white"
@@ -3183,7 +3189,7 @@ export default function App() {
                                 value={skill.name}
                                 onChange={e => {
                                   const newSkills = [...configForm[editLang].personalSkills];
-                                  newSkills[idx].name = e.target.value;
+                                  newSkills[idx] = { ...newSkills[idx], name: e.target.value };
                                   setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], personalSkills: newSkills } });
                                 }}
                                 className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
@@ -3193,7 +3199,7 @@ export default function App() {
                                 value={skill.description}
                                 onChange={e => {
                                   const newSkills = [...configForm[editLang].personalSkills];
-                                  newSkills[idx].description = e.target.value;
+                                  newSkills[idx] = { ...newSkills[idx], description: e.target.value };
                                   setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], personalSkills: newSkills } });
                                 }}
                                 className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50 resize-none"
@@ -3230,7 +3236,7 @@ export default function App() {
                             value={lang.name}
                             onChange={e => {
                               const newLangs = [...configForm.languages];
-                              newLangs[idx].name = e.target.value;
+                              newLangs[idx] = { ...newLangs[idx], name: e.target.value };
                               setConfigForm({ ...configForm, languages: newLangs });
                             }}
                             className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
@@ -3240,7 +3246,7 @@ export default function App() {
                             value={lang.level}
                             onChange={e => {
                               const newLangs = [...configForm.languages];
-                              newLangs[idx].level = e.target.value;
+                              newLangs[idx] = { ...newLangs[idx], level: e.target.value };
                               setConfigForm({ ...configForm, languages: newLangs });
                             }}
                             className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
