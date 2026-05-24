@@ -30,7 +30,8 @@ import {
   GraduationCap,
   Award,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Printer
 } from 'lucide-react';
 import { 
   auth, 
@@ -472,7 +473,7 @@ const sortTimelineItems = <T extends { period: string; startMonth?: string; star
 
 // --- Components ---
 
-const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | 'pt' }>(({ config, lang }, ref) => {
+const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | 'pt', isCompact?: boolean }>(({ config, lang, isCompact = false }, ref) => {
   const data = config[lang];
   const isPt = lang === 'pt';
 
@@ -492,10 +493,10 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
   return (
     <div ref={ref} className="bg-white text-black font-sans w-[210mm] h-[297mm] flex shadow-2xl overflow-hidden print:shadow-none print:flex" style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
       {/* Sidebar */}
-      <div className="w-[32%] bg-[#2d2d2d] text-white p-6 flex flex-col gap-6" style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
+      <div className={`w-[32%] bg-[#2d2d2d] text-white flex flex-col shrink-0 ${isCompact ? 'p-4 gap-4' : 'p-6 gap-6'}`} style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
         {/* Profile Image */}
         <div className="flex justify-center">
-          <div className="w-40 h-40 rounded-full border-4 border-white/10 overflow-hidden bg-zinc-800">
+          <div className={`rounded-full border-4 border-white/10 overflow-hidden bg-zinc-800 transition-all duration-300 ${isCompact ? 'w-24 h-24' : 'w-40 h-40'}`}>
             <img 
               src={config.profileImage} 
               alt="Profile" 
@@ -507,38 +508,38 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
 
         {/* Contacts */}
         <section>
-          <h2 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
-            <UserIcon size={14} />
+          <h2 className={`font-bold uppercase tracking-widest flex items-center gap-2 border-b border-white/10 pb-1.5 ${isCompact ? 'text-[11px] mb-2.5' : 'text-sm mb-4'}`}>
+            <UserIcon size={isCompact ? 12 : 14} />
             {isPt ? 'Contactos' : 'Contacts'}
           </h2>
-          <ul className="space-y-3 text-[10px]">
-            <li className="flex items-center gap-3">
-              <Phone size={12} className="text-zinc-400" />
-              {config.contacts.phone}
+          <ul className={`text-[10px] ${isCompact ? 'space-y-1.5' : 'space-y-3'}`}>
+            <li className="flex items-center gap-2.5">
+              <Phone size={12} className="text-zinc-400 shrink-0" />
+              <span className="truncate">{config.contacts.phone}</span>
             </li>
-            <li className="flex items-center gap-3">
-              <Mail size={12} className="text-zinc-400" />
-              {config.contacts.email}
+            <li className="flex items-center gap-2.5">
+              <Mail size={12} className="text-zinc-400 shrink-0" />
+              <span className="truncate">{config.contacts.email}</span>
             </li>
-            <li className="flex items-center gap-3">
-              <MapPin size={12} className="text-zinc-400" />
-              {config.contacts.location}
+            <li className="flex items-center gap-2.5">
+              <MapPin size={12} className="text-zinc-400 shrink-0" />
+              <span className="truncate">{config.contacts.location}</span>
             </li>
-            <li className="flex items-center gap-3">
-              <Github size={12} className="text-zinc-400" />
-              <a href={`https://github.com/${config.contacts.github}`} target="_blank" rel="noopener noreferrer" className="hover:text-orange-400 transition-colors">
+            <li className="flex items-center gap-2.5">
+              <Github size={12} className="text-zinc-400 shrink-0" />
+              <a href={`https://github.com/${config.contacts.github}`} target="_blank" rel="noopener noreferrer" className="hover:text-orange-400 transition-colors truncate">
                 github.com/{config.contacts.github}
               </a>
             </li>
-            <li className="flex items-center gap-3">
-              <Linkedin size={12} className="text-zinc-400" />
-              <a href={`https://linkedin.com/in/${config.contacts.linkedin}`} target="_blank" rel="noopener noreferrer" className="hover:text-orange-400 transition-colors">
+            <li className="flex items-center gap-2.5">
+              <Linkedin size={12} className="text-zinc-400 shrink-0" />
+              <a href={`https://linkedin.com/in/${config.contacts.linkedin}`} target="_blank" rel="noopener noreferrer" className="hover:text-orange-400 transition-colors truncate">
                 linkedin.com/in/{config.contacts.linkedin}
               </a>
             </li>
-            <li className="flex items-center gap-3">
-              <Globe size={12} className="text-zinc-400" />
-              <a href={config.contacts.website.startsWith('http') ? config.contacts.website : `https://${config.contacts.website}`} target="_blank" rel="noopener noreferrer" className="hover:text-orange-400 transition-colors">
+            <li className="flex items-center gap-2.5">
+              <Globe size={12} className="text-zinc-400 shrink-0" />
+              <a href={config.contacts.website.startsWith('http') ? config.contacts.website : `https://${config.contacts.website}`} target="_blank" rel="noopener noreferrer" className="hover:text-orange-400 transition-colors truncate">
                 {config.contacts.website}
               </a>
             </li>
@@ -547,14 +548,14 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
 
         {/* Technical Skills */}
         <section>
-          <h2 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
-            <Cpu size={14} />
+          <h2 className={`font-bold uppercase tracking-widest flex items-center gap-2 border-b border-white/10 pb-1.5 ${isCompact ? 'text-[11px] mb-2.5' : 'text-sm mb-4'}`}>
+            <Cpu size={isCompact ? 12 : 14} />
             {isPt ? 'Competências Técnicas' : 'Technical Skills'}
           </h2>
-          <ul className="space-y-2">
+          <ul className={isCompact ? 'space-y-1' : 'space-y-2'}>
             {config.technicalSkills.map((skill, i) => (
               <li key={i} className="flex justify-between items-center text-[10px]">
-                <span className="font-mono">{skill.name}</span>
+                <span className="font-mono truncate mr-1">{skill.name}</span>
                 <StarRating level={skill.level} />
               </li>
             ))}
@@ -563,14 +564,14 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
 
         {/* Personal Skills */}
         <section>
-          <h2 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
-            <UserIcon size={14} />
+          <h2 className={`font-bold uppercase tracking-widest flex items-center gap-2 border-b border-white/10 pb-1.5 ${isCompact ? 'text-[11px] mb-2.5' : 'text-sm mb-4'}`}>
+            <UserIcon size={isCompact ? 12 : 14} />
             {isPt ? 'Competências Pessoais' : 'Personal Skills'}
           </h2>
-          <ul className="space-y-4 text-[10px]">
+          <ul className={`text-[10px] ${isCompact ? 'space-y-2.5' : 'space-y-4'}`}>
             {data.personalSkills.map((skill, i) => (
               <li key={i}>
-                <p className="font-bold underline mb-1">{skill.name}</p>
+                <p className="font-bold underline mb-0.5">{skill.name}</p>
                 <p className="text-zinc-400 leading-tight">{skill.description}</p>
               </li>
             ))}
@@ -579,14 +580,14 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
 
         {/* Languages */}
         <section>
-          <h2 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
-            <Globe size={14} />
+          <h2 className={`font-bold uppercase tracking-widest flex items-center gap-2 border-b border-white/10 pb-1.5 ${isCompact ? 'text-[11px] mb-2.5' : 'text-sm mb-4'}`}>
+            <Globe size={isCompact ? 12 : 14} />
             {isPt ? 'Linguísticos' : 'Languages'}
           </h2>
-          <ul className="space-y-2 text-[10px]">
+          <ul className={`text-[10px] ${isCompact ? 'space-y-1' : 'space-y-2'}`}>
             {config.languages.map((lang, i) => (
-              <li key={i} className="flex items-center gap-2">
-                <span className="font-bold">{lang.name}</span>
+              <li key={i} className="flex items-center gap-1.5">
+                <span className="font-bold truncate">{lang.name}</span>
                 <span className="text-zinc-400">— {lang.level}</span>
               </li>
             ))}
@@ -595,46 +596,46 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-10 flex flex-col gap-6">
+      <div className={`flex-1 flex flex-col ${isCompact ? 'p-6 py-5 gap-4' : 'p-10 gap-6'}`}>
         {/* Header */}
         <header>
-          <h1 className="text-4xl font-black text-[#2d2d2d] uppercase tracking-tight leading-none mb-2">
+          <h1 className={`font-black text-[#2d2d2d] uppercase tracking-tight leading-none ${isCompact ? 'text-2xl mb-1' : 'text-4xl mb-2'}`}>
             {(data.fullName || "Daniil Kachkovskyy").split(' ').map((part, i, arr) => (
               <React.Fragment key={i}>
                 {part}{i < arr.length - 1 && <br />}
               </React.Fragment>
             ))}
           </h1>
-          <p className="text-xs font-bold text-orange-500 uppercase tracking-[0.2em]">
+          <p className={`font-bold text-orange-500 uppercase tracking-[0.2em] ${isCompact ? 'text-[9.5px]' : 'text-xs'}`}>
             {data.jobTitle}
           </p>
         </header>
 
         {/* About Me */}
         <section>
-          <h2 className="text-xl font-bold uppercase tracking-widest flex items-center gap-3 mb-4 text-[#2d2d2d]">
-            <UserIcon size={20} className="text-[#2d2d2d]" />
+          <h2 className={`font-bold uppercase tracking-widest flex items-center gap-2.5 text-[#2d2d2d] ${isCompact ? 'text-sm mb-1.5' : 'text-xl mb-4'}`}>
+            <UserIcon size={isCompact ? 16 : 20} className="text-[#2d2d2d]" />
             {isPt ? 'Sobre Mim' : 'About Me'}
           </h2>
-          <p className="text-xs leading-relaxed text-zinc-700 text-justify">
+          <p className={`leading-relaxed text-zinc-700 text-justify ${isCompact ? 'text-[10.5px]' : 'text-xs'}`}>
             {data.aboutMe}
           </p>
         </section>
 
         {/* Education */}
         <section>
-          <h2 className="text-lg font-bold uppercase tracking-widest flex items-center gap-3 mb-4 text-[#2d2d2d]">
-            <GraduationCap size={18} className="text-[#2d2d2d]" />
+          <h2 className={`font-bold uppercase tracking-widest flex items-center gap-2.5 text-[#2d2d2d] ${isCompact ? 'text-sm mb-1.5' : 'text-lg mb-4'}`}>
+            <GraduationCap size={isCompact ? 16 : 18} className="text-[#2d2d2d]" />
             {isPt ? 'Formação Académica' : 'Education'}
           </h2>
-          <div className="space-y-5 border-l-2 border-zinc-100 ml-2.5 pl-6">
+          <div className={`border-l-2 border-zinc-100 ml-2.5 ${isCompact ? 'space-y-3 pl-4' : 'space-y-5 pl-6'}`}>
             {data.education.map((edu, i) => (
               <div key={i} className="relative">
-                <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-white" />
-                <h3 className="text-sm font-bold text-[#2d2d2d] mb-1">{edu.degree}</h3>
-                <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">{edu.institution}</p>
-                <p className="text-[10px] text-orange-500 font-mono mb-3">{edu.period}</p>
-                <ul className="text-[10px] text-zinc-600 space-y-1 list-disc pl-4">
+                <div className={`absolute rounded-full bg-orange-500 border-2 border-white ${isCompact ? '-left-[21px] top-0.5 w-2.5 h-2.5' : '-left-[31px] top-1 w-3 h-3'}`} />
+                <h3 className={`font-bold text-[#2d2d2d] ${isCompact ? 'text-xs mb-0.5' : 'text-sm mb-1'}`}>{edu.degree}</h3>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase mb-0.5">{edu.institution}</p>
+                <p className={`text-[10px] text-orange-500 font-mono ${isCompact ? 'mb-1.5' : 'mb-3'}`}>{edu.period}</p>
+                <ul className={`text-zinc-600 list-disc pl-4 ${isCompact ? 'text-[9.5px] space-y-0.5' : 'text-[10px] space-y-1'}`}>
                   {edu.points.map((p, j) => <li key={j}>{p}</li>)}
                 </ul>
               </div>
@@ -644,18 +645,18 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
 
         {/* Certifications */}
         <section>
-          <h2 className="text-lg font-bold uppercase tracking-widest flex items-center gap-3 mb-4 text-[#2d2d2d]">
-            <Award size={18} className="text-[#2d2d2d]" />
+          <h2 className={`font-bold uppercase tracking-widest flex items-center gap-2.5 text-[#2d2d2d] ${isCompact ? 'text-sm mb-1.5' : 'text-lg mb-4'}`}>
+            <Award size={isCompact ? 16 : 18} className="text-[#2d2d2d]" />
             {isPt ? 'Certificações' : 'Certifications'}
           </h2>
-          <div className="space-y-5 border-l-2 border-zinc-100 ml-2.5 pl-6">
+          <div className={`border-l-2 border-zinc-100 ml-2.5 ${isCompact ? 'space-y-3 pl-4' : 'space-y-5 pl-6'}`}>
             {data.certifications.map((cert, i) => (
               <div key={i} className="relative">
-                <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-white" />
-                <h3 className="text-sm font-bold text-[#2d2d2d] mb-1">{cert.title}</h3>
-                <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">{cert.subtitle}</p>
-                <p className="text-[10px] text-orange-500 font-mono mb-3">{cert.period}</p>
-                <ul className="text-[10px] text-zinc-600 space-y-1 list-disc pl-4">
+                <div className={`absolute rounded-full bg-orange-500 border-2 border-white ${isCompact ? '-left-[21px] top-0.5 w-2.5 h-2.5' : '-left-[31px] top-1 w-3 h-3'}`} />
+                <h3 className={`font-bold text-[#2d2d2d] ${isCompact ? 'text-xs mb-0.5' : 'text-sm mb-1'}`}>{cert.title}</h3>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase mb-0.5">{cert.subtitle}</p>
+                <p className={`text-[10px] text-orange-500 font-mono ${isCompact ? 'mb-1.5' : 'mb-3'}`}>{cert.period}</p>
+                <ul className={`text-zinc-600 list-disc pl-4 ${isCompact ? 'text-[9.5px] space-y-0.5' : 'text-[10px] space-y-1'}`}>
                   {cert.points.map((p, j) => <li key={j}>{p}</li>)}
                 </ul>
               </div>
@@ -665,18 +666,18 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
 
         {/* Experience */}
         <section>
-          <h2 className="text-lg font-bold uppercase tracking-widest flex items-center gap-3 mb-4 text-[#2d2d2d]">
-            <Briefcase size={18} className="text-[#2d2d2d]" />
+          <h2 className={`font-bold uppercase tracking-widest flex items-center gap-2.5 text-[#2d2d2d] ${isCompact ? 'text-sm mb-1.5' : 'text-lg mb-4'}`}>
+            <Briefcase size={isCompact ? 16 : 18} className="text-[#2d2d2d]" />
             {isPt ? 'Experiência Profissional' : 'Experience'}
           </h2>
-          <div className="space-y-5 border-l-2 border-zinc-100 ml-2.5 pl-6">
+          <div className={`border-l-2 border-zinc-100 ml-2.5 ${isCompact ? 'space-y-3 pl-4' : 'space-y-5 pl-6'}`}>
             {data.experiences.map((exp, i) => (
               <div key={i} className="relative">
-                <div className="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-white" />
-                <h3 className="text-sm font-bold text-[#2d2d2d] mb-1">{exp.title}</h3>
-                <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">{exp.company}</p>
-                <p className="text-[10px] text-orange-500 font-mono mb-3">{exp.period}</p>
-                <ul className="text-[10px] text-zinc-600 space-y-1 list-disc pl-4">
+                <div className={`absolute rounded-full bg-orange-500 border-2 border-white ${isCompact ? '-left-[21px] top-0.5 w-2.5 h-2.5' : '-left-[31px] top-1 w-3 h-3'}`} />
+                <h3 className={`font-bold text-[#2d2d2d] ${isCompact ? 'text-xs mb-0.5' : 'text-sm mb-1'}`}>{exp.title}</h3>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase mb-0.5">{exp.company}</p>
+                <p className={`text-[10px] text-orange-500 font-mono ${isCompact ? 'mb-1.5' : 'mb-3'}`}>{exp.period}</p>
+                <ul className={`text-zinc-600 list-disc pl-4 ${isCompact ? 'text-[9.5px] space-y-0.5' : 'text-[10px] space-y-1'}`}>
                   {exp.points.map((p, j) => <li key={j}>{p}</li>)}
                 </ul>
               </div>
@@ -953,6 +954,7 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const cvRef = useRef<HTMLDivElement>(null);
+  const [isCompact, setIsCompact] = useState(true);
 
   const handlePrint = useReactToPrint({
     contentRef: cvRef,
@@ -1572,8 +1574,43 @@ export default function App() {
 
   if (isPrintMode) {
     return (
-      <div className="min-h-screen bg-white flex justify-center p-0 md:p-8 cv-print-mode-wrapper">
-        <CV ref={cvRef} config={siteConfig} lang={lang} />
+      <div className="min-h-screen bg-[#121214] flex flex-col items-center justify-start py-8 px-4 md:py-12 md:px-8 cv-print-mode-wrapper print:bg-white print:p-0">
+        {/* Print controls bar */}
+        <div className="no-print bg-zinc-900 border border-white/10 px-5 py-3 rounded-2xl flex flex-wrap items-center gap-4 shadow-2xl mb-8 max-w-[210mm] w-full text-white">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+            <span className="text-xs font-mono uppercase text-zinc-300 font-bold">Print Preview Console</span>
+          </div>
+          <div className="h-4 w-[1px] bg-white/10 hidden sm:block"></div>
+          <div className="flex items-center gap-3 mr-auto">
+            <span className="text-xs text-zinc-400 font-medium">{lang === 'en' ? 'Layout density:' : 'Densidade da página:'}</span>
+            <div className="flex bg-black/40 p-0.5 rounded-lg border border-white/5">
+              <button 
+                type="button"
+                className={`px-3 py-1 text-[10px] font-mono uppercase tracking-widest rounded transition-all ${!isCompact ? 'bg-orange-500 text-black font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+                onClick={() => setIsCompact(false)}
+              >
+                {lang === 'en' ? 'Regular' : 'Regular'}
+              </button>
+              <button 
+                type="button"
+                className={`px-3 py-1 text-[10px] font-mono uppercase tracking-widest rounded transition-all ${isCompact ? 'bg-orange-500 text-black font-bold' : 'text-zinc-500 hover:text-zinc-300'}`}
+                onClick={() => setIsCompact(true)}
+              >
+                {lang === 'en' ? 'Compact' : 'Compacto'}
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="bg-orange-500 text-black font-mono font-bold text-[10px] px-4 py-2 rounded-xl hover:bg-orange-400 active:scale-95 transition-all uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_15px_rgba(249,115,22,0.2)]"
+          >
+            <Printer size={12} /> {lang === 'en' ? 'Print / Save PDF' : 'Imprimir / Gravar PDF'}
+          </button>
+        </div>
+
+        <CV ref={cvRef} config={siteConfig} lang={lang} isCompact={isCompact} />
       </div>
     );
   }
