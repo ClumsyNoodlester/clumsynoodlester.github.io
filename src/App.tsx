@@ -84,6 +84,11 @@ interface Experience {
   company: string;
   period: string;
   points: string[];
+  startMonth?: string;
+  startYear?: string;
+  endMonth?: string;
+  endYear?: string;
+  isPresent?: boolean;
 }
 
 interface Education {
@@ -91,6 +96,11 @@ interface Education {
   institution: string;
   period: string;
   points: string[];
+  startMonth?: string;
+  startYear?: string;
+  endMonth?: string;
+  endYear?: string;
+  isPresent?: boolean;
 }
 
 interface Certification {
@@ -287,6 +297,177 @@ const DEFAULT_CONFIG: SiteConfig = {
 };
 
 import { useReactToPrint } from 'react-to-print';
+
+// --- Helper Functions for Period Parsing, Generation & Sorting ---
+
+const parsePeriodString = (period: string) => {
+  const monthsEn = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const monthsPt = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+
+  const res = {
+    startMonth: "1",
+    startYear: new Date().getFullYear().toString(),
+    endMonth: "",
+    endYear: "",
+    isPresent: true
+  };
+
+  if (!period) return res;
+
+  // Normalize separators
+  const cleaned = period.replace(/[–—]/g, '-').trim();
+  const parts = cleaned.split('-').map(p => p.trim());
+
+  const parseSingle = (part: string) => {
+    const lower = part.toLowerCase();
+    if (lower === 'present' || lower === 'presente' || lower === 'current' || lower === 'atualmente') {
+      return { isPresent: true };
+    }
+
+    const words = part.split(/\s+/).filter(Boolean);
+    let monthVal = "1";
+    let yearVal = new Date().getFullYear().toString();
+
+    for (const w of words) {
+      const cleanW = w.replace(/,/g, '').trim();
+      if (/^\d{4}$/.test(cleanW)) {
+        yearVal = cleanW;
+      } else {
+        const enIdx = monthsEn.findIndex(m => m.toLowerCase().startsWith(cleanW.toLowerCase().slice(0, 3)));
+        const ptIdx = monthsPt.findIndex(m => m.toLowerCase().startsWith(cleanW.toLowerCase().slice(0, 3)));
+        if (enIdx !== -1) {
+          monthVal = (enIdx + 1).toString();
+        } else if (ptIdx !== -1) {
+          monthVal = (ptIdx + 1).toString();
+        }
+      }
+    }
+    return { isPresent: false, month: monthVal, year: yearVal };
+  };
+
+  if (parts[0]) {
+    const parsedStart = parseSingle(parts[0]);
+    if (parsedStart && !parsedStart.isPresent) {
+      res.startMonth = parsedStart.month || "1";
+      res.startYear = parsedStart.year || res.startYear;
+    }
+  }
+
+  if (parts.length > 1 && parts[1]) {
+    const parsedEnd = parseSingle(parts[1]);
+    if (parsedEnd) {
+      if (parsedEnd.isPresent) {
+        res.isPresent = true;
+        res.endMonth = "";
+        res.endYear = "";
+      } else {
+        res.isPresent = false;
+        res.endMonth = parsedEnd.month || "";
+        res.endYear = parsedEnd.year || "";
+      }
+    }
+  } else {
+    if (period.toLowerCase().includes('present') || period.toLowerCase().includes('presente')) {
+      res.isPresent = true;
+    } else {
+      res.isPresent = false;
+      res.endMonth = res.startMonth;
+      res.endYear = res.startYear;
+    }
+  }
+
+  return res;
+};
+
+const ensureStructuredDates = (item: any, isPt: boolean) => {
+  if (item && item.startMonth && item.startYear) {
+    return {
+      startMonth: item.startMonth,
+      startYear: item.startYear,
+      endMonth: item.endMonth || '',
+      endYear: item.endYear || '',
+      isPresent: item.isPresent !== undefined ? item.isPresent : (!item.endYear || item.endYear === ''),
+    };
+  }
+  const parsed = parsePeriodString(item?.period || '');
+  return parsed;
+};
+
+const generatePeriodString = (
+  startMonth: string,
+  startYear: string,
+  endMonth: string,
+  endYear: string,
+  isPresent: boolean,
+  targetLang: 'en' | 'pt'
+): string => {
+  const monthsEn = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const monthsPt = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+  const months = targetLang === 'en' ? monthsEn : monthsPt;
+  const presentStr = targetLang === 'en' ? 'Present' : 'Presente';
+
+  const sM = months[parseInt(startMonth, 10) - 1] || months[0];
+  const sPeriod = `${sM} ${startYear}`;
+
+  if (isPresent) {
+    return `${sPeriod} – ${presentStr}`;
+  }
+
+  if (!endMonth || !endYear) {
+    return `${sPeriod} – ${presentStr}`;
+  }
+
+  const eM = months[parseInt(endMonth, 10) - 1] || months[0];
+  return `${sPeriod} – ${eM} ${endYear}`;
+};
+
+const sortTimelineItems = <T extends { period: string; startMonth?: string; startYear?: string; endMonth?: string; endYear?: string; isPresent?: boolean; }>(itemsEn: T[], itemsPt: T[]): { sortedEn: T[]; sortedPt: T[] } => {
+  const itemsWithScores = itemsEn.map((item, idx) => {
+    const parsed = item.startMonth && item.startYear
+      ? {
+          startMonth: item.startMonth,
+          startYear: item.startYear,
+          endMonth: item.endMonth || '',
+          endYear: item.endYear || '',
+          isPresent: item.isPresent !== undefined ? item.isPresent : (!item.endYear || item.endYear === '')
+        }
+      : parsePeriodString(item.period);
+
+    const startYr = parseInt(parsed.startYear, 10) || 0;
+    const startMo = parseInt(parsed.startMonth, 10) || 1;
+    
+    let endScore = 0;
+    if (parsed.isPresent) {
+      endScore = 9999999;
+    } else {
+      const endYr = parseInt(parsed.endYear, 10) || 0;
+      const endMo = parseInt(parsed.endMonth, 10) || 1;
+      endScore = endYr * 12 + endMo;
+    }
+
+    const score = endScore * 100000 + (startYr * 12 + startMo);
+    return { idx, score };
+  });
+
+  itemsWithScores.sort((a, b) => b.score - a.score);
+
+  const sortedEn = itemsWithScores.map(x => itemsEn[x.idx]);
+  const sortedPt = itemsWithScores.map(x => itemsPt[x.idx]);
+
+  return { sortedEn, sortedPt };
+};
 
 // --- Components ---
 
@@ -786,17 +967,87 @@ export default function App() {
 
   // Auto-print in print mode
   useEffect(() => {
-    if (isPrintMode && !isLoading && cvRef.current) {
+    if (isPrintMode && !isLoading) {
       const timer = setTimeout(() => {
-        handlePrint();
+        window.print();
       }, 1000); // Give it a second to settle
       return () => clearTimeout(timer);
     }
-  }, [isPrintMode, isLoading, handlePrint]);
+  }, [isPrintMode, isLoading]);
   
   // Form State
   const [newProject, setNewProject] = useState({ title: '', description: '', tags: '', link: '' });
   const [configForm, setConfigForm] = useState<SiteConfig>(DEFAULT_CONFIG);
+
+  const handlePeriodChange = (
+    idx: number,
+    field: 'startMonth' | 'startYear' | 'endMonth' | 'endYear' | 'isPresent',
+    value: any,
+    section: 'experience' | 'education'
+  ) => {
+    const listKey = section === 'experience' ? 'experiences' : 'education';
+    
+    // Copy arrays
+    const newEn = [...(configForm.en[listKey] || [])];
+    const newPt = [...(configForm.pt[listKey] || [])];
+    
+    const itemEn = { ...newEn[idx] };
+    const itemPt = { ...newPt[idx] };
+    
+    if (itemEn) {
+      (itemEn as any)[field] = value;
+    }
+    if (itemPt) {
+      (itemPt as any)[field] = value;
+    }
+    
+    // Re-resolve or regenerate period strings
+    const datesEn = ensureStructuredDates(itemEn, false);
+    const datesPt = ensureStructuredDates(itemPt, true);
+    
+    if (itemEn) {
+      itemEn.period = generatePeriodString(
+        datesEn.startMonth,
+        datesEn.startYear,
+        datesEn.endMonth,
+        datesEn.endYear,
+        datesEn.isPresent,
+        'en'
+      );
+      itemEn.startMonth = datesEn.startMonth;
+      itemEn.startYear = datesEn.startYear;
+      itemEn.endMonth = datesEn.endMonth;
+      itemEn.endYear = datesEn.endYear;
+      itemEn.isPresent = datesEn.isPresent;
+      newEn[idx] = itemEn;
+    }
+    
+    if (itemPt) {
+      itemPt.period = generatePeriodString(
+        datesPt.startMonth,
+        datesPt.startYear,
+        datesPt.endMonth,
+        datesPt.endYear,
+        datesPt.isPresent,
+        'pt'
+      );
+      itemPt.startMonth = datesPt.startMonth;
+      itemPt.startYear = datesPt.startYear;
+      itemPt.endMonth = datesPt.endMonth;
+      itemPt.endYear = datesPt.endYear;
+      itemPt.isPresent = datesPt.isPresent;
+      newPt[idx] = itemPt;
+    }
+    
+    // Sort chronologically on update
+    const { sortedEn, sortedPt } = sortTimelineItems(newEn, newPt);
+    
+    setConfigForm(prev => ({
+      ...prev,
+      en: { ...prev.en, [listKey]: sortedEn },
+      pt: { ...prev.pt, [listKey]: sortedPt }
+    }));
+  };
 
   const isAdmin = user?.email === "dan.kachkyy@gmail.com";
 
@@ -1009,7 +1260,7 @@ export default function App() {
 
   if (isPrintMode) {
     return (
-      <div className="min-h-screen bg-white flex justify-center p-0 md:p-8">
+      <div className="min-h-screen bg-white flex justify-center p-0 md:p-8 cv-print-mode-wrapper">
         <CV ref={cvRef} config={siteConfig} lang={lang} />
       </div>
     );
@@ -1645,20 +1896,22 @@ export default function App() {
                           <div key={idx} className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-4 relative">
                             <button 
                               type="button" 
-                              onClick={() => setConfigForm({
-                                ...configForm,
-                                [editLang]: {
-                                  ...configForm[editLang],
-                                  introCards: configForm[editLang].introCards.filter((_, i) => i !== idx)
-                                }
-                              })}
+                              onClick={() => {
+                                const newEn = (configForm.en.introCards || []).filter((_, i) => i !== idx);
+                                const newPt = (configForm.pt.introCards || []).filter((_, i) => i !== idx);
+                                setConfigForm({
+                                  ...configForm,
+                                  en: { ...configForm.en, introCards: newEn },
+                                  pt: { ...configForm.pt, introCards: newPt }
+                                });
+                              }}
                               className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors"
                             >
                               <Trash2 size={16} />
                             </button>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-1">
-                                <label className="text-[10px] font-mono uppercase text-zinc-500">Title</label>
+                                <label className="text-[10px] font-mono uppercase text-zinc-500">Title ({editLang.toUpperCase()})</label>
                                 <input 
                                   value={card.title}
                                   onChange={e => {
@@ -1670,13 +1923,21 @@ export default function App() {
                                 />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-[10px] font-mono uppercase text-zinc-500">Icon</label>
+                                <label className="text-[10px] font-mono uppercase text-zinc-500">Icon (Shared)</label>
                                 <select 
                                   value={card.icon}
                                   onChange={e => {
-                                    const newCards = [...configForm[editLang].introCards];
-                                    newCards[idx].icon = e.target.value;
-                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], introCards: newCards } });
+                                    const val = e.target.value;
+                                    // Icon is synchronized across both languages
+                                    const newEn = [...(configForm.en.introCards || [])];
+                                    const newPt = [...(configForm.pt.introCards || [])];
+                                    if (newEn[idx]) newEn[idx].icon = val;
+                                    if (newPt[idx]) newPt[idx].icon = val;
+                                    setConfigForm({
+                                      ...configForm,
+                                      en: { ...configForm.en, introCards: newEn },
+                                      pt: { ...configForm.pt, introCards: newPt }
+                                    });
                                   }}
                                   className="w-full bg-black/20 border border-white/5 rounded-lg px-3 py-2 text-sm focus:border-orange-500/50 outline-none"
                                 >
@@ -1687,7 +1948,7 @@ export default function App() {
                               </div>
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[10px] font-mono uppercase text-zinc-500">Description</label>
+                              <label className="text-[10px] font-mono uppercase text-zinc-500">Description ({editLang.toUpperCase()})</label>
                               <textarea 
                                 value={card.description}
                                 onChange={e => {
@@ -1704,13 +1965,15 @@ export default function App() {
                       </div>
                       <button 
                         type="button" 
-                        onClick={() => setConfigForm({
-                          ...configForm,
-                          [editLang]: {
-                            ...configForm[editLang],
-                            introCards: [...configForm[editLang].introCards, { title: '', description: '', icon: 'Cpu' }]
-                          }
-                        })}
+                        onClick={() => {
+                          const newCardEn = { title: '', description: '', icon: 'Cpu' };
+                          const newCardPt = { title: '', description: '', icon: 'Cpu' };
+                          setConfigForm({
+                            ...configForm,
+                            en: { ...configForm.en, introCards: [...(configForm.en.introCards || []), newCardEn] },
+                            pt: { ...configForm.pt, introCards: [...(configForm.pt.introCards || []), newCardPt] }
+                          });
+                        }}
                         className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
                       >
                         <Plus size={14} /> Add Card
@@ -1720,95 +1983,259 @@ export default function App() {
 
                   {configTab === 'experience' && (
                     <div className="space-y-6">
-                      {configForm[editLang].experiences.map((exp, idx) => (
-                        <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-4 relative group">
-                          <button 
-                            type="button"
-                            onClick={() => setConfigForm({
-                              ...configForm,
-                              [editLang]: { ...configForm[editLang], experiences: configForm[editLang].experiences.filter((_, i) => i !== idx) }
-                            })}
-                            className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                          <div className="grid grid-cols-2 gap-4">
-                            <input 
-                              placeholder="Title"
-                              value={exp.title}
-                              onChange={e => {
-                                const newExps = [...configForm[editLang].experiences];
-                                newExps[idx].title = e.target.value;
-                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
-                              }}
-                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                            />
-                            <input 
-                              placeholder="Company"
-                              value={exp.company}
-                              onChange={e => {
-                                const newExps = [...configForm[editLang].experiences];
-                                newExps[idx].company = e.target.value;
-                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
-                              }}
-                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                            />
-                          </div>
-                          <input 
-                            placeholder="Period"
-                            value={exp.period}
-                            onChange={e => {
-                              const newExps = [...configForm[editLang].experiences];
-                              newExps[idx].period = e.target.value;
-                               setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
-                            }}
-                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                          />
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-mono uppercase text-zinc-500">Points</label>
-                            {exp.points.map((point, pIdx) => (
-                              <div key={pIdx} className="flex gap-2">
-                                <input 
-                                  value={point}
-                                  onChange={e => {
-                                    const newExps = [...configForm[editLang].experiences];
-                                    newExps[idx].points[pIdx] = e.target.value;
-                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
-                                  }}
-                                  className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                                />
-                                <button 
-                                  type="button"
-                                  onClick={() => {
-                                    const newExps = [...configForm[editLang].experiences];
-                                    newExps[idx].points = newExps[idx].points.filter((_, i) => i !== pIdx);
-                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
-                                  }}
-                                  className="text-zinc-600 hover:text-red-500"
-                                >
-                                  <Plus size={14} className="rotate-45" />
-                                </button>
-                              </div>
-                            ))}
+                      {(configForm[editLang].experiences || []).map((exp, idx) => {
+                        const dates = ensureStructuredDates(exp, editLang === 'pt');
+                        return (
+                          <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-4 relative group">
                             <button 
                               type="button"
                               onClick={() => {
-                                const newExps = [...configForm[editLang].experiences];
-                                newExps[idx].points.push('');
-                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
+                                const newEn = (configForm.en.experiences || []).filter((_, i) => i !== idx);
+                                const newPt = (configForm.pt.experiences || []).filter((_, i) => i !== idx);
+                                setConfigForm({
+                                  ...configForm,
+                                  en: { ...configForm.en, experiences: newEn },
+                                  pt: { ...configForm.pt, experiences: newPt }
+                                });
                               }}
-                              className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
+                              className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors z-10"
                             >
-                              <Plus size={12} /> Add Point
+                              <Trash2 size={16} />
                             </button>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-mono uppercase text-zinc-500">Title ({editLang.toUpperCase()})</label>
+                                <input 
+                                  placeholder="Title"
+                                  value={exp.title}
+                                  onChange={e => {
+                                    const newExps = [...configForm[editLang].experiences];
+                                    newExps[idx].title = e.target.value;
+                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
+                                  }}
+                                  className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-mono uppercase text-zinc-500">Company (Shared)</label>
+                                <input 
+                                  placeholder="Company"
+                                  value={exp.company}
+                                  onChange={e => {
+                                    const val = e.target.value;
+                                    const newEn = [...(configForm.en.experiences || [])];
+                                    const newPt = [...(configForm.pt.experiences || [])];
+                                    if (newEn[idx]) newEn[idx].company = val;
+                                    if (newPt[idx]) newPt[idx].company = val;
+                                    setConfigForm({
+                                      ...configForm,
+                                      en: { ...configForm.en, experiences: newEn },
+                                      pt: { ...configForm.pt, experiences: newPt }
+                                    });
+                                  }}
+                                  className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Dropdowns for Month and Year */}
+                            <div className="space-y-2 bg-black/10 p-3 rounded-lg border border-white/5">
+                              <span className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">Timeline Period</span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* Start Date */}
+                                <div className="space-y-1">
+                                  <span className="text-[9px] font-mono uppercase text-zinc-500 block">Start Date</span>
+                                  <div className="flex gap-2">
+                                    <select
+                                      value={dates.startMonth}
+                                      onChange={e => handlePeriodChange(idx, 'startMonth', e.target.value, 'experience')}
+                                      className="flex-1 bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-orange-500/50 text-white"
+                                    >
+                                      {[
+                                        { val: "1", label: editLang === 'pt' ? "Janeiro" : "January" },
+                                        { val: "2", label: editLang === 'pt' ? "Fevereiro" : "February" },
+                                        { val: "3", label: editLang === 'pt' ? "Março" : "March" },
+                                        { val: "4", label: editLang === 'pt' ? "Abril" : "April" },
+                                        { val: "5", label: editLang === 'pt' ? "Maio" : "May" },
+                                        { val: "6", label: editLang === 'pt' ? "Junho" : "June" },
+                                        { val: "7", label: editLang === 'pt' ? "Julho" : "July" },
+                                        { val: "8", label: editLang === 'pt' ? "Agosto" : "August" },
+                                        { val: "9", label: editLang === 'pt' ? "Setembro" : "September" },
+                                        { val: "10", label: editLang === 'pt' ? "Outubro" : "October" },
+                                        { val: "11", label: editLang === 'pt' ? "Novembro" : "November" },
+                                        { val: "12", label: editLang === 'pt' ? "Dezembro" : "December" },
+                                      ].map(m => (
+                                        <option key={m.val} value={m.val}>{m.label}</option>
+                                      ))}
+                                    </select>
+                                    <select
+                                      value={dates.startYear}
+                                      onChange={e => handlePeriodChange(idx, 'startYear', e.target.value, 'experience')}
+                                      className="flex-1 bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-orange-500/50 text-white"
+                                    >
+                                      {Array.from({ length: 25 }, (_, i) => (2015 + i).toString()).map(yr => (
+                                        <option key={yr} value={yr}>{yr}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+
+                                {/* End Date */}
+                                <div className="space-y-1">
+                                  <span className="text-[9px] font-mono uppercase text-zinc-500 block">End Date</span>
+                                  <div className="flex gap-2">
+                                    <select
+                                      value={dates.isPresent ? "" : dates.endMonth}
+                                      disabled={dates.isPresent}
+                                      onChange={e => handlePeriodChange(idx, 'endMonth', e.target.value, 'experience')}
+                                      className="flex-1 bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-orange-500/50 text-white disabled:opacity-40"
+                                    >
+                                      <option value="">{editLang === 'pt' ? "Presente" : "Present"}</option>
+                                      {[
+                                        { val: "1", label: editLang === 'pt' ? "Janeiro" : "January" },
+                                        { val: "2", label: editLang === 'pt' ? "Fevereiro" : "February" },
+                                        { val: "3", label: editLang === 'pt' ? "Março" : "March" },
+                                        { val: "4", label: editLang === 'pt' ? "Abril" : "April" },
+                                        { val: "5", label: editLang === 'pt' ? "Maio" : "May" },
+                                        { val: "6", label: editLang === 'pt' ? "Junho" : "June" },
+                                        { val: "7", label: editLang === 'pt' ? "Julho" : "July" },
+                                        { val: "8", label: editLang === 'pt' ? "Agosto" : "August" },
+                                        { val: "9", label: editLang === 'pt' ? "Setembro" : "September" },
+                                        { val: "10", label: editLang === 'pt' ? "Outubro" : "October" },
+                                        { val: "11", label: editLang === 'pt' ? "Novembro" : "November" },
+                                        { val: "12", label: editLang === 'pt' ? "Dezembro" : "December" },
+                                      ].map(m => (
+                                        <option key={m.val} value={m.val}>{m.label}</option>
+                                      ))}
+                                    </select>
+                                    <select
+                                      value={dates.isPresent ? "" : dates.endYear}
+                                      disabled={dates.isPresent}
+                                      onChange={e => handlePeriodChange(idx, 'endYear', e.target.value, 'experience')}
+                                      className="flex-1 bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-orange-500/50 text-white disabled:opacity-40"
+                                    >
+                                      <option value="">{editLang === 'pt' ? "Presente" : "Present"}</option>
+                                      {Array.from({ length: 25 }, (_, i) => (2015 + i).toString()).map(yr => (
+                                        <option key={yr} value={yr}>{yr}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-4 mt-2">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={dates.isPresent}
+                                    onChange={e => handlePeriodChange(idx, 'isPresent', e.target.checked, 'experience')}
+                                    className="rounded bg-black/40 border border-white/10 text-orange-500 focus:ring-0"
+                                  />
+                                  <span className="text-[10px] font-mono uppercase text-zinc-400">Present (Currently working here)</span>
+                                </label>
+                                <span className="text-[10px] font-mono text-orange-400/80">Result: {exp.period}</span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-500 block">Bullet Points</label>
+                              {(exp.points || []).map((point, pIdx) => (
+                                <div key={pIdx} className="flex gap-2">
+                                  <input 
+                                    value={point}
+                                    onChange={e => {
+                                      const newExps = [...configForm[editLang].experiences];
+                                      newExps[idx].points[pIdx] = e.target.value;
+                                      setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: newExps } });
+                                    }}
+                                    className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                                  />
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      // Remove point from BOTH languages to keep them in sync
+                                      const newEn = [...(configForm.en.experiences || [])];
+                                      const newPt = [...(configForm.pt.experiences || [])];
+                                      if (newEn[idx] && newEn[idx].points) {
+                                        newEn[idx].points = newEn[idx].points.filter((_, i) => i !== pIdx);
+                                      }
+                                      if (newPt[idx] && newPt[idx].points) {
+                                        newPt[idx].points = newPt[idx].points.filter((_, i) => i !== pIdx);
+                                      }
+                                      setConfigForm({
+                                        ...configForm,
+                                        en: { ...configForm.en, experiences: newEn },
+                                        pt: { ...configForm.pt, experiences: newPt }
+                                      });
+                                    }}
+                                    className="text-zinc-600 hover:text-red-500"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              ))}
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  // Add blank point to BOTH languages to keep them in sync
+                                  const newEn = [...(configForm.en.experiences || [])];
+                                  const newPt = [...(configForm.pt.experiences || [])];
+                                  if (newEn[idx]) newEn[idx].points = [...(newEn[idx].points || []), ''];
+                                  if (newPt[idx]) newPt[idx].points = [...(newPt[idx].points || []), ''];
+                                  setConfigForm({
+                                    ...configForm,
+                                    en: { ...configForm.en, experiences: newEn },
+                                    pt: { ...configForm.pt, experiences: newPt }
+                                  });
+                                }}
+                                className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
+                              >
+                                <Plus size={12} /> Add Point
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       <button 
                         type="button"
                         onClick={() => {
-                          const newExp = { title: '', company: '', period: '', points: [''] };
-                          setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], experiences: [...configForm[editLang].experiences, newExp] } });
+                          const currentYr = new Date().getFullYear().toString();
+                          const periodEn = generatePeriodString("1", currentYr, "", "", true, "en");
+                          const periodPt = generatePeriodString("1", currentYr, "", "", true, "pt");
+
+                          const newExpEn = { 
+                            title: '', 
+                            company: '', 
+                            period: periodEn, 
+                            points: [''],
+                            startMonth: '1',
+                            startYear: currentYr,
+                            endMonth: '',
+                            endYear: '',
+                            isPresent: true
+                          };
+                          const newExpPt = { 
+                            title: '', 
+                            company: '', 
+                            period: periodPt, 
+                            points: [''],
+                            startMonth: '1',
+                            startYear: currentYr,
+                            endMonth: '',
+                            endYear: '',
+                            isPresent: true
+                          };
+
+                          const updatedEn = [...(configForm.en.experiences || []), newExpEn];
+                          const updatedPt = [...(configForm.pt.experiences || []), newExpPt];
+
+                          const { sortedEn, sortedPt } = sortTimelineItems(updatedEn, updatedPt);
+
+                          setConfigForm({
+                            ...configForm,
+                            en: { ...configForm.en, experiences: sortedEn },
+                            pt: { ...configForm.pt, experiences: sortedPt }
+                          });
                         }}
                         className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-zinc-500 hover:border-orange-500/50 hover:text-orange-500 transition-all flex items-center justify-center gap-2 font-mono text-xs uppercase"
                       >
@@ -1819,95 +2246,259 @@ export default function App() {
 
                   {configTab === 'education' && (
                     <div className="space-y-6">
-                      {configForm[editLang].education.map((edu, idx) => (
-                        <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-4 relative group">
-                          <button 
-                            type="button"
-                            onClick={() => setConfigForm({
-                              ...configForm,
-                              [editLang]: { ...configForm[editLang], education: configForm[editLang].education.filter((_, i) => i !== idx) }
-                            })}
-                            className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                          <div className="grid grid-cols-2 gap-4">
-                            <input 
-                              placeholder="Degree"
-                              value={edu.degree}
-                              onChange={e => {
-                                const newEdu = [...configForm[editLang].education];
-                                newEdu[idx].degree = e.target.value;
-                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
-                              }}
-                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                            />
-                            <input 
-                              placeholder="Institution"
-                              value={edu.institution}
-                              onChange={e => {
-                                const newEdu = [...configForm[editLang].education];
-                                newEdu[idx].institution = e.target.value;
-                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
-                              }}
-                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                            />
-                          </div>
-                          <input 
-                            placeholder="Period"
-                            value={edu.period}
-                            onChange={e => {
-                              const newEdu = [...configForm[editLang].education];
-                              newEdu[idx].period = e.target.value;
-                              setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
-                            }}
-                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                          />
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-mono uppercase text-zinc-500">Points</label>
-                            {edu.points.map((point, pIdx) => (
-                              <div key={pIdx} className="flex gap-2">
-                                <input 
-                                  value={point}
-                                  onChange={e => {
-                                    const newEdu = [...configForm[editLang].education];
-                                    newEdu[idx].points[pIdx] = e.target.value;
-                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
-                                  }}
-                                  className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                                />
-                                <button 
-                                  type="button"
-                                  onClick={() => {
-                                    const newEdu = [...configForm[editLang].education];
-                                    newEdu[idx].points = newEdu[idx].points.filter((_, i) => i !== pIdx);
-                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
-                                  }}
-                                  className="text-zinc-600 hover:text-red-500"
-                                >
-                                  <Plus size={14} className="rotate-45" />
-                                </button>
-                              </div>
-                            ))}
+                      {(configForm[editLang].education || []).map((edu, idx) => {
+                        const dates = ensureStructuredDates(edu, editLang === 'pt');
+                        return (
+                          <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-4 relative group">
                             <button 
                               type="button"
                               onClick={() => {
-                                const newEdu = [...configForm[editLang].education];
-                                newEdu[idx].points.push('');
-                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
+                                const newEn = (configForm.en.education || []).filter((_, i) => i !== idx);
+                                const newPt = (configForm.pt.education || []).filter((_, i) => i !== idx);
+                                setConfigForm({
+                                  ...configForm,
+                                  en: { ...configForm.en, education: newEn },
+                                  pt: { ...configForm.pt, education: newPt }
+                                });
                               }}
-                              className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
+                              className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors z-10"
                             >
-                              <Plus size={12} /> Add Point
+                              <Trash2 size={16} />
                             </button>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-mono uppercase text-zinc-500">Degree ({editLang.toUpperCase()})</label>
+                                <input 
+                                  placeholder="Degree"
+                                  value={edu.degree}
+                                  onChange={e => {
+                                    const newEdu = [...configForm[editLang].education];
+                                    newEdu[idx].degree = e.target.value;
+                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
+                                  }}
+                                  className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-mono uppercase text-zinc-500">Institution (Shared)</label>
+                                <input 
+                                  placeholder="Institution"
+                                  value={edu.institution}
+                                  onChange={e => {
+                                    const val = e.target.value;
+                                    const newEn = [...(configForm.en.education || [])];
+                                    const newPt = [...(configForm.pt.education || [])];
+                                    if (newEn[idx]) newEn[idx].institution = val;
+                                    if (newPt[idx]) newPt[idx].institution = val;
+                                    setConfigForm({
+                                      ...configForm,
+                                      en: { ...configForm.en, education: newEn },
+                                      pt: { ...configForm.pt, education: newPt }
+                                    });
+                                  }}
+                                  className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Dropdowns for Month and Year */}
+                            <div className="space-y-2 bg-black/10 p-3 rounded-lg border border-white/5">
+                              <span className="text-[10px] font-mono uppercase text-zinc-400 block font-bold">Timeline Period</span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* Start Date */}
+                                <div className="space-y-1">
+                                  <span className="text-[9px] font-mono uppercase text-zinc-500 block">Start Date</span>
+                                  <div className="flex gap-2">
+                                    <select
+                                      value={dates.startMonth}
+                                      onChange={e => handlePeriodChange(idx, 'startMonth', e.target.value, 'education')}
+                                      className="flex-1 bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-orange-500/50 text-white"
+                                    >
+                                      {[
+                                        { val: "1", label: editLang === 'pt' ? "Janeiro" : "January" },
+                                        { val: "2", label: editLang === 'pt' ? "Fevereiro" : "February" },
+                                        { val: "3", label: editLang === 'pt' ? "Março" : "March" },
+                                        { val: "4", label: editLang === 'pt' ? "Abril" : "April" },
+                                        { val: "5", label: editLang === 'pt' ? "Maio" : "May" },
+                                        { val: "6", label: editLang === 'pt' ? "Junho" : "June" },
+                                        { val: "7", label: editLang === 'pt' ? "Julho" : "July" },
+                                        { val: "8", label: editLang === 'pt' ? "Agosto" : "August" },
+                                        { val: "9", label: editLang === 'pt' ? "Setembro" : "September" },
+                                        { val: "10", label: editLang === 'pt' ? "Outubro" : "October" },
+                                        { val: "11", label: editLang === 'pt' ? "Novembro" : "November" },
+                                        { val: "12", label: editLang === 'pt' ? "Dezembro" : "December" },
+                                      ].map(m => (
+                                        <option key={m.val} value={m.val}>{m.label}</option>
+                                      ))}
+                                    </select>
+                                    <select
+                                      value={dates.startYear}
+                                      onChange={e => handlePeriodChange(idx, 'startYear', e.target.value, 'education')}
+                                      className="flex-1 bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-orange-500/50 text-white"
+                                    >
+                                      {Array.from({ length: 25 }, (_, i) => (2015 + i).toString()).map(yr => (
+                                        <option key={yr} value={yr}>{yr}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+
+                                {/* End Date */}
+                                <div className="space-y-1">
+                                  <span className="text-[9px] font-mono uppercase text-zinc-500 block">End Date</span>
+                                  <div className="flex gap-2">
+                                    <select
+                                      value={dates.isPresent ? "" : dates.endMonth}
+                                      disabled={dates.isPresent}
+                                      onChange={e => handlePeriodChange(idx, 'endMonth', e.target.value, 'education')}
+                                      className="flex-1 bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-orange-500/50 text-white disabled:opacity-40"
+                                    >
+                                      <option value="">{editLang === 'pt' ? "Presente" : "Present"}</option>
+                                      {[
+                                        { val: "1", label: editLang === 'pt' ? "Janeiro" : "January" },
+                                        { val: "2", label: editLang === 'pt' ? "Fevereiro" : "February" },
+                                        { val: "3", label: editLang === 'pt' ? "Março" : "March" },
+                                        { val: "4", label: editLang === 'pt' ? "Abril" : "April" },
+                                        { val: "5", label: editLang === 'pt' ? "Maio" : "May" },
+                                        { val: "6", label: editLang === 'pt' ? "Junho" : "June" },
+                                        { val: "7", label: editLang === 'pt' ? "Julho" : "July" },
+                                        { val: "8", label: editLang === 'pt' ? "Agosto" : "August" },
+                                        { val: "9", label: editLang === 'pt' ? "Setembro" : "September" },
+                                        { val: "10", label: editLang === 'pt' ? "Outubro" : "October" },
+                                        { val: "11", label: editLang === 'pt' ? "Novembro" : "November" },
+                                        { val: "12", label: editLang === 'pt' ? "Dezembro" : "December" },
+                                      ].map(m => (
+                                        <option key={m.val} value={m.val}>{m.label}</option>
+                                      ))}
+                                    </select>
+                                    <select
+                                      value={dates.isPresent ? "" : dates.endYear}
+                                      disabled={dates.isPresent}
+                                      onChange={e => handlePeriodChange(idx, 'endYear', e.target.value, 'education')}
+                                      className="flex-1 bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-orange-500/50 text-white disabled:opacity-40"
+                                    >
+                                      <option value="">{editLang === 'pt' ? "Presente" : "Present"}</option>
+                                      {Array.from({ length: 25 }, (_, i) => (2015 + i).toString()).map(yr => (
+                                        <option key={yr} value={yr}>{yr}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-4 mt-2">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={dates.isPresent}
+                                    onChange={e => handlePeriodChange(idx, 'isPresent', e.target.checked, 'education')}
+                                    className="rounded bg-black/40 border border-white/10 text-orange-500 focus:ring-0"
+                                  />
+                                  <span className="text-[10px] font-mono uppercase text-zinc-400">Present (Currently studying here)</span>
+                                </label>
+                                <span className="text-[10px] font-mono text-orange-400/80">Result: {edu.period}</span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-mono uppercase text-zinc-500 block">Bullet Points</label>
+                              {(edu.points || []).map((point, pIdx) => (
+                                <div key={pIdx} className="flex gap-2">
+                                  <input 
+                                    value={point}
+                                    onChange={e => {
+                                      const newEdu = [...configForm[editLang].education];
+                                      newEdu[idx].points[pIdx] = e.target.value;
+                                      setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: newEdu } });
+                                    }}
+                                    className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                                  />
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      // Remove point from BOTH languages to keep them in sync
+                                      const newEn = [...(configForm.en.education || [])];
+                                      const newPt = [...(configForm.pt.education || [])];
+                                      if (newEn[idx] && newEn[idx].points) {
+                                        newEn[idx].points = newEn[idx].points.filter((_, i) => i !== pIdx);
+                                      }
+                                      if (newPt[idx] && newPt[idx].points) {
+                                        newPt[idx].points = newPt[idx].points.filter((_, i) => i !== pIdx);
+                                      }
+                                      setConfigForm({
+                                        ...configForm,
+                                        en: { ...configForm.en, education: newEn },
+                                        pt: { ...configForm.pt, education: newPt }
+                                      });
+                                    }}
+                                    className="text-zinc-600 hover:text-red-500"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              ))}
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  // Add blank point to BOTH languages to keep them in sync
+                                  const newEn = [...(configForm.en.education || [])];
+                                  const newPt = [...(configForm.pt.education || [])];
+                                  if (newEn[idx]) newEn[idx].points = [...(newEn[idx].points || []), ''];
+                                  if (newPt[idx]) newPt[idx].points = [...(newPt[idx].points || []), ''];
+                                  setConfigForm({
+                                    ...configForm,
+                                    en: { ...configForm.en, education: newEn },
+                                    pt: { ...configForm.pt, education: newPt }
+                                  });
+                                }}
+                                className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
+                              >
+                                <Plus size={12} /> Add Point
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       <button 
                         type="button"
                         onClick={() => {
-                          const newEdu = { degree: '', institution: '', period: '', points: [''] };
-                          setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], education: [...configForm[editLang].education, newEdu] } });
+                          const currentYr = new Date().getFullYear().toString();
+                          const periodEn = generatePeriodString("1", currentYr, "", "", true, "en");
+                          const periodPt = generatePeriodString("1", currentYr, "", "", true, "pt");
+
+                          const newEduEn = { 
+                            degree: '', 
+                            institution: '', 
+                            period: periodEn, 
+                            points: [''],
+                            startMonth: '1',
+                            startYear: currentYr,
+                            endMonth: '',
+                            endYear: '',
+                            isPresent: true
+                          };
+                          const newEduPt = { 
+                            degree: '', 
+                            institution: '', 
+                            period: periodPt, 
+                            points: [''],
+                            startMonth: '1',
+                            startYear: currentYr,
+                            endMonth: '',
+                            endYear: '',
+                            isPresent: true
+                          };
+
+                          const updatedEn = [...(configForm.en.education || []), newEduEn];
+                          const updatedPt = [...(configForm.pt.education || []), newEduPt];
+
+                          const { sortedEn, sortedPt } = sortTimelineItems(updatedEn, updatedPt);
+
+                          setConfigForm({
+                            ...configForm,
+                            en: { ...configForm.en, education: sortedEn },
+                            pt: { ...configForm.pt, education: sortedPt }
+                          });
                         }}
                         className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-zinc-500 hover:border-orange-500/50 hover:text-orange-500 transition-all flex items-center justify-center gap-2 font-mono text-xs uppercase"
                       >
@@ -1918,50 +2509,78 @@ export default function App() {
 
                   {configTab === 'certs' && (
                     <div className="space-y-6">
-                      {configForm[editLang].certifications.map((cert, idx) => (
+                      {(configForm[editLang].certifications || []).map((cert, idx) => (
                         <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-4 relative group">
                           <button 
                             type="button"
-                            onClick={() => setConfigForm({
-                              ...configForm,
-                              [editLang]: { ...configForm[editLang], certifications: configForm[editLang].certifications.filter((_, i) => i !== idx) }
-                            })}
+                            onClick={() => {
+                              const newEn = (configForm.en.certifications || []).filter((_, i) => i !== idx);
+                              const newPt = (configForm.pt.certifications || []).filter((_, i) => i !== idx);
+                              setConfigForm({
+                                ...configForm,
+                                en: { ...configForm.en, certifications: newEn },
+                                pt: { ...configForm.pt, certifications: newPt }
+                              });
+                            }}
                             className="absolute top-4 right-4 text-zinc-600 hover:text-red-500 transition-colors"
                           >
                             <Trash2 size={16} />
                           </button>
                           <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-mono uppercase text-zinc-500">Title ({editLang.toUpperCase()})</label>
+                              <input 
+                                placeholder="Title"
+                                value={cert.title}
+                                onChange={e => {
+                                  const newCerts = [...configForm[editLang].certifications];
+                                  newCerts[idx].title = e.target.value;
+                                  setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
+                                }}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-mono uppercase text-zinc-500">Subtitle (Shared)</label>
+                              <input 
+                                placeholder="Subtitle"
+                                value={cert.subtitle}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  const newEn = [...(configForm.en.certifications || [])];
+                                  const newPt = [...(configForm.pt.certifications || [])];
+                                  if (newEn[idx]) newEn[idx].subtitle = val;
+                                  if (newPt[idx]) newPt[idx].subtitle = val;
+                                  setConfigForm({
+                                    ...configForm,
+                                    en: { ...configForm.en, certifications: newEn },
+                                    pt: { ...configForm.pt, certifications: newPt }
+                                  });
+                                }}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-mono uppercase text-zinc-500">Period (Shared)</label>
                             <input 
-                              placeholder="Title"
-                              value={cert.title}
+                              placeholder="Period"
+                              value={cert.period}
                               onChange={e => {
-                                const newCerts = [...configForm[editLang].certifications];
-                                newCerts[idx].title = e.target.value;
-                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
+                                const val = e.target.value;
+                                const newEn = [...(configForm.en.certifications || [])];
+                                const newPt = [...(configForm.pt.certifications || [])];
+                                if (newEn[idx]) newEn[idx].period = val;
+                                if (newPt[idx]) newPt[idx].period = val;
+                                setConfigForm({
+                                  ...configForm,
+                                  en: { ...configForm.en, certifications: newEn },
+                                  pt: { ...configForm.pt, certifications: newPt }
+                                });
                               }}
-                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                            />
-                            <input 
-                              placeholder="Subtitle"
-                              value={cert.subtitle}
-                              onChange={e => {
-                                const newCerts = [...configForm[editLang].certifications];
-                                newCerts[idx].subtitle = e.target.value;
-                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
-                              }}
-                              className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                              className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
                             />
                           </div>
-                          <input 
-                            placeholder="Period"
-                            value={cert.period}
-                            onChange={e => {
-                              const newCerts = [...configForm[editLang].certifications];
-                              newCerts[idx].period = e.target.value;
-                              setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
-                            }}
-                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
-                          />
                           <div className="space-y-2">
                             <label className="text-[10px] font-mono uppercase text-zinc-500">Points</label>
                             {cert.points.map((point, pIdx) => (
@@ -1978,22 +2597,38 @@ export default function App() {
                                 <button 
                                   type="button"
                                   onClick={() => {
-                                    const newCerts = [...configForm[editLang].certifications];
-                                    newCerts[idx].points = newCerts[idx].points.filter((_, i) => i !== pIdx);
-                                    setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
+                                    const newEn = [...(configForm.en.certifications || [])];
+                                    const newPt = [...(configForm.pt.certifications || [])];
+                                    if (newEn[idx] && newEn[idx].points) {
+                                      newEn[idx].points = newEn[idx].points.filter((_, i) => i !== pIdx);
+                                    }
+                                    if (newPt[idx] && newPt[idx].points) {
+                                      newPt[idx].points = newPt[idx].points.filter((_, i) => i !== pIdx);
+                                    }
+                                    setConfigForm({
+                                      ...configForm,
+                                      en: { ...configForm.en, certifications: newEn },
+                                      pt: { ...configForm.pt, certifications: newPt }
+                                    });
                                   }}
                                   className="text-zinc-600 hover:text-red-500"
                                 >
-                                  <Plus size={14} className="rotate-45" />
+                                  <Trash2 size={13} />
                                 </button>
                               </div>
                             ))}
                             <button 
                               type="button"
                               onClick={() => {
-                                const newCerts = [...configForm[editLang].certifications];
-                                newCerts[idx].points.push('');
-                                setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: newCerts } });
+                                const newEn = [...(configForm.en.certifications || [])];
+                                const newPt = [...(configForm.pt.certifications || [])];
+                                if (newEn[idx]) newEn[idx].points = [...(newEn[idx].points || []), ''];
+                                if (newPt[idx]) newPt[idx].points = [...(newPt[idx].points || []), ''];
+                                setConfigForm({
+                                  ...configForm,
+                                  en: { ...configForm.en, certifications: newEn },
+                                  pt: { ...configForm.pt, certifications: newPt }
+                                });
                               }}
                               className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
                             >
@@ -2005,8 +2640,13 @@ export default function App() {
                       <button 
                         type="button"
                         onClick={() => {
-                          const newCert = { title: '', subtitle: '', period: '', points: [''] };
-                          setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], certifications: [...configForm[editLang].certifications, newCert] } });
+                          const newCertEn = { title: '', subtitle: '', period: '', points: [''] };
+                          const newCertPt = { title: '', subtitle: '', period: '', points: [''] };
+                          setConfigForm({
+                            ...configForm,
+                            en: { ...configForm.en, certifications: [...(configForm.en.certifications || []), newCertEn] },
+                            pt: { ...configForm.pt, certifications: [...(configForm.pt.certifications || []), newCertPt] }
+                          });
                         }}
                         className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-zinc-500 hover:border-orange-500/50 hover:text-orange-500 transition-all flex items-center justify-center gap-2 font-mono text-xs uppercase"
                       >
@@ -2020,7 +2660,7 @@ export default function App() {
                       <div className="space-y-4">
                         <h3 className="text-xs font-mono uppercase text-zinc-400 border-b border-white/5 pb-2">Technical Skills</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {configForm.technicalSkills.map((skill, idx) => (
+                          {(configForm.technicalSkills || []).map((skill, idx) => (
                             <div key={idx} className="flex gap-2 items-center bg-black/20 p-2 rounded-lg border border-white/5">
                               <input 
                                 placeholder="Name"
@@ -2057,9 +2697,21 @@ export default function App() {
                       <div className="space-y-4">
                         <h3 className="text-xs font-mono uppercase text-zinc-400 border-b border-white/5 pb-2">Personal Skills ({editLang.toUpperCase()})</h3>
                         <div className="space-y-4">
-                          {configForm[editLang].personalSkills.map((skill, idx) => (
+                          {(configForm[editLang].personalSkills || []).map((skill, idx) => (
                             <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-2 relative">
-                              <button type="button" onClick={() => setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], personalSkills: configForm[editLang].personalSkills.filter((_, i) => i !== idx) } })} className="absolute top-4 right-4 text-zinc-600 hover:text-red-500">
+                              <button 
+                                type="button" 
+                                onClick={() => {
+                                  const newEn = (configForm.en.personalSkills || []).filter((_, i) => i !== idx);
+                                  const newPt = (configForm.pt.personalSkills || []).filter((_, i) => i !== idx);
+                                  setConfigForm({
+                                    ...configForm,
+                                    en: { ...configForm.en, personalSkills: newEn },
+                                    pt: { ...configForm.pt, personalSkills: newPt }
+                                  });
+                                }} 
+                                className="absolute top-4 right-4 text-zinc-600 hover:text-red-500"
+                              >
                                 <Trash2 size={14} />
                               </button>
                               <input 
@@ -2086,7 +2738,19 @@ export default function App() {
                             </div>
                           ))}
                         </div>
-                        <button type="button" onClick={() => setConfigForm({ ...configForm, [editLang]: { ...configForm[editLang], personalSkills: [...configForm[editLang].personalSkills, { name: '', description: '' }] } })} className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            const newSkillEn = { name: '', description: '' };
+                            const newSkillPt = { name: '', description: '' };
+                            setConfigForm({
+                              ...configForm,
+                              en: { ...configForm.en, personalSkills: [...(configForm.en.personalSkills || []), newSkillEn] },
+                              pt: { ...configForm.pt, personalSkills: [...(configForm.pt.personalSkills || []), newSkillPt] }
+                            });
+                          }} 
+                          className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
+                        >
                           <Plus size={12} /> Add Personal Skill
                         </button>
                       </div>
