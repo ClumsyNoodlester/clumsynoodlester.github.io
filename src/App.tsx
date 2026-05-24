@@ -29,7 +29,8 @@ import {
   Star,
   GraduationCap,
   Award,
-  BookOpen
+  BookOpen,
+  Sparkles
 } from 'lucide-react';
 import { 
   auth, 
@@ -1049,6 +1050,317 @@ export default function App() {
     }));
   };
 
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translatingIdx, setTranslatingIdx] = useState<string | null>(null);
+
+  const translateApiCall = async (text: string | string[], targetL: 'en' | 'pt'): Promise<any> => {
+    if (!text || (typeof text === 'string' && !text.trim()) || (Array.isArray(text) && text.length === 0)) {
+      return text;
+    }
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, targetLang: targetL })
+      });
+      if (!res.ok) throw new Error("Translation failed");
+      const data = await res.json();
+      return data.translated;
+    } catch (e) {
+      console.error("Translation api call error", e);
+      return text;
+    }
+  };
+
+  const translateSingleExperience = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
+    setTranslatingIdx(`exp-${idx}`);
+    try {
+      const sourceExp = configForm[fromLang].experiences[idx];
+      if (!sourceExp) return;
+
+      const titleTranslated = await translateApiCall(sourceExp.title, toLang);
+      const pointsTranslated = await translateApiCall(sourceExp.points, toLang);
+
+      const updatedToExps = [...(configForm[toLang].experiences || [])];
+      updatedToExps[idx] = {
+        ...sourceExp,
+        title: titleTranslated,
+        points: pointsTranslated,
+        period: generatePeriodString(
+          sourceExp.startMonth || '1',
+          sourceExp.startYear || '2024',
+          sourceExp.endMonth || '',
+          sourceExp.endYear || '',
+          sourceExp.isPresent !== false,
+          toLang
+        )
+      };
+
+      setConfigForm(prev => ({
+        ...prev,
+        [toLang]: {
+          ...prev[toLang],
+          experiences: updatedToExps
+        }
+      }));
+    } catch (e) {
+      console.error("Failed to translate experience", e);
+    } finally {
+      setTranslatingIdx(null);
+    }
+  };
+
+  const translateSingleEducation = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
+    setTranslatingIdx(`edu-${idx}`);
+    try {
+      const sourceEdu = configForm[fromLang].education[idx];
+      if (!sourceEdu) return;
+
+      const degreeTranslated = await translateApiCall(sourceEdu.degree, toLang);
+      const pointsTranslated = await translateApiCall(sourceEdu.points, toLang);
+
+      const updatedToEdu = [...(configForm[toLang].education || [])];
+      updatedToEdu[idx] = {
+        ...sourceEdu,
+        degree: degreeTranslated,
+        points: pointsTranslated,
+        period: generatePeriodString(
+          sourceEdu.startMonth || '1',
+          sourceEdu.startYear || '2024',
+          sourceEdu.endMonth || '',
+          sourceEdu.endYear || '',
+          sourceEdu.isPresent !== false,
+          toLang
+        )
+      };
+
+      setConfigForm(prev => ({
+        ...prev,
+        [toLang]: {
+          ...prev[toLang],
+          education: updatedToEdu
+        }
+      }));
+    } catch (e) {
+      console.error("Failed to translate education", e);
+    } finally {
+      setTranslatingIdx(null);
+    }
+  };
+
+  const translateSingleCert = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
+    setTranslatingIdx(`cert-${idx}`);
+    try {
+      const sourceCert = configForm[fromLang].certifications[idx];
+      if (!sourceCert) return;
+
+      const titleTranslated = await translateApiCall(sourceCert.title, toLang);
+      const subtitleTranslated = await translateApiCall(sourceCert.subtitle, toLang);
+      const pointsTranslated = await translateApiCall(sourceCert.points, toLang);
+
+      const updatedToCerts = [...(configForm[toLang].certifications || [])];
+      updatedToCerts[idx] = {
+        ...sourceCert,
+        title: titleTranslated,
+        subtitle: subtitleTranslated,
+        points: pointsTranslated,
+      };
+
+      setConfigForm(prev => ({
+        ...prev,
+        [toLang]: {
+          ...prev[toLang],
+          certifications: updatedToCerts
+        }
+      }));
+    } catch (e) {
+      console.error("Failed to translate certification", e);
+    } finally {
+      setTranslatingIdx(null);
+    }
+  };
+
+  const translateSinglePersonalSkill = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
+    setTranslatingIdx(`skill-${idx}`);
+    try {
+      const sourceSkill = configForm[fromLang].personalSkills[idx];
+      if (!sourceSkill) return;
+
+      const nameTranslated = await translateApiCall(sourceSkill.name, toLang);
+      const descTranslated = await translateApiCall(sourceSkill.description, toLang);
+
+      const updatedToSkills = [...(configForm[toLang].personalSkills || [])];
+      updatedToSkills[idx] = {
+        name: nameTranslated,
+        description: descTranslated,
+      };
+
+      setConfigForm(prev => ({
+        ...prev,
+        [toLang]: {
+          ...prev[toLang],
+          personalSkills: updatedToSkills
+        }
+      }));
+    } catch (e) {
+      console.error("Failed to translate personal skill", e);
+    } finally {
+      setTranslatingIdx(null);
+    }
+  };
+
+  const translateSingleIntroCard = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
+    setTranslatingIdx(`card-${idx}`);
+    try {
+      const sourceCard = configForm[fromLang].introCards[idx];
+      if (!sourceCard) return;
+
+      const titleTranslated = await translateApiCall(sourceCard.title, toLang);
+      const descTranslated = await translateApiCall(sourceCard.description, toLang);
+
+      const updatedToCards = [...(configForm[toLang].introCards || [])];
+      updatedToCards[idx] = {
+        ...sourceCard,
+        title: titleTranslated,
+        description: descTranslated,
+      };
+
+      setConfigForm(prev => ({
+        ...prev,
+        [toLang]: {
+          ...prev[toLang],
+          introCards: updatedToCards
+        }
+      }));
+    } catch (e) {
+      console.error("Failed to translate intro card", e);
+    } finally {
+      setTranslatingIdx(null);
+    }
+  };
+
+  const translateEntireSection = async (section: string, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
+    setIsTranslating(true);
+    try {
+      if (section === 'basic') {
+        const jobTitleT = await translateApiCall(configForm[fromLang].jobTitle, toLang);
+        const statusLineT = await translateApiCall(configForm[fromLang].statusLine, toLang);
+        const introTextT = await translateApiCall(configForm[fromLang].introText, toLang);
+        const bioT = await translateApiCall(configForm[fromLang].bio, toLang);
+        const profileTextT = await translateApiCall(configForm[fromLang].profileText, toLang);
+        const aboutMeT = await translateApiCall(configForm[fromLang].aboutMe, toLang);
+
+        setConfigForm(prev => ({
+          ...prev,
+          [toLang]: {
+            ...prev[toLang],
+            fullName: prev[fromLang].fullName,
+            jobTitle: jobTitleT,
+            statusLine: statusLineT,
+            introText: introTextT,
+            bio: bioT,
+            profileText: profileTextT,
+            aboutMe: aboutMeT
+          }
+        }));
+      } else if (section === 'intro') {
+        const translatedCards = await Promise.all(
+          (configForm[fromLang].introCards || []).map(async (card) => {
+            const titleT = await translateApiCall(card.title, toLang);
+            const descT = await translateApiCall(card.description, toLang);
+            return { ...card, title: titleT, description: descT };
+          })
+        );
+        setConfigForm(prev => ({
+          ...prev,
+          [toLang]: { ...prev[toLang], introCards: translatedCards }
+        }));
+      } else if (section === 'experience') {
+        const translatedExps = await Promise.all(
+          (configForm[fromLang].experiences || []).map(async (exp) => {
+            const titleT = await translateApiCall(exp.title, toLang);
+            const pointsT = await translateApiCall(exp.points, toLang);
+            return {
+              ...exp,
+              title: titleT,
+              points: pointsT,
+              period: generatePeriodString(
+                exp.startMonth || '1',
+                exp.startYear || '2024',
+                exp.endMonth || '',
+                exp.endYear || '',
+                exp.isPresent !== false,
+                toLang
+              )
+            };
+          })
+        );
+        setConfigForm(prev => ({
+          ...prev,
+          [toLang]: { ...prev[toLang], experiences: translatedExps }
+        }));
+      } else if (section === 'education') {
+        const translatedEdu = await Promise.all(
+          (configForm[fromLang].education || []).map(async (edu) => {
+            const degreeT = await translateApiCall(edu.degree, toLang);
+            const pointsT = await translateApiCall(edu.points, toLang);
+            return {
+              ...edu,
+              degree: degreeT,
+              points: pointsT,
+              period: generatePeriodString(
+                edu.startMonth || '1',
+                edu.startYear || '2024',
+                edu.endMonth || '',
+                edu.endYear || '',
+                edu.isPresent !== false,
+                toLang
+              )
+            };
+          })
+        );
+        setConfigForm(prev => ({
+          ...prev,
+          [toLang]: { ...prev[toLang], education: translatedEdu }
+        }));
+      } else if (section === 'certs') {
+        const translatedCerts = await Promise.all(
+          (configForm[fromLang].certifications || []).map(async (cert) => {
+            const titleT = await translateApiCall(cert.title, toLang);
+            const subtitleT = await translateApiCall(cert.subtitle, toLang);
+            const pointsT = await translateApiCall(cert.points, toLang);
+            return {
+              ...cert,
+              title: titleT,
+              subtitle: subtitleT,
+              points: pointsT
+            };
+          })
+        );
+        setConfigForm(prev => ({
+          ...prev,
+          [toLang]: { ...prev[toLang], certifications: translatedCerts }
+        }));
+      } else if (section === 'skills') {
+        const translatedSkills = await Promise.all(
+          (configForm[fromLang].personalSkills || []).map(async (skill) => {
+            const nameT = await translateApiCall(skill.name, toLang);
+            const descT = await translateApiCall(skill.description, toLang);
+            return { ...skill, name: nameT, description: descT };
+          })
+        );
+        setConfigForm(prev => ({
+          ...prev,
+          [toLang]: { ...prev[toLang], personalSkills: translatedSkills }
+        }));
+      }
+    } catch (e) {
+      console.error("Section translation failed", e);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const isAdmin = user?.email === "dan.kachkyy@gmail.com";
 
   useEffect(() => {
@@ -1772,6 +2084,38 @@ export default function App() {
                 </div>
 
                 <form onSubmit={handleUpdateConfig} className="flex-1 overflow-y-auto pr-2 space-y-8 custom-scrollbar">
+                  {configTab !== 'contacts' && configTab !== 'languages' && (
+                    <div className="flex items-center justify-between p-3.5 bg-orange-500/10 border border-orange-500/20 rounded-xl text-xs flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={14} className="text-orange-500 animate-pulse flex-shrink-0" />
+                        <span className="text-zinc-300">
+                          {editLang === 'en' 
+                            ? "Translate this entire section's English fields to Portuguese!" 
+                            : "Translate this entire section's Portuguese fields to English!"}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={isTranslating}
+                        onClick={() => {
+                          const fromL = editLang;
+                          const toL = editLang === 'en' ? 'pt' : 'en';
+                          translateEntireSection(configTab, fromL, toL);
+                        }}
+                        className="px-3 py-1.5 bg-orange-500 text-black font-mono font-bold rounded-lg hover:bg-orange-400 transition-colors uppercase text-[10px] disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
+                      >
+                        {isTranslating ? (
+                          <>
+                            <span className="w-2 h-2 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                            Translating...
+                          </>
+                        ) : (
+                          `Translate to ${editLang === 'en' ? "PT 🇵🇹" : "EN 🇬🇧"}`
+                        )}
+                      </button>
+                    </div>
+                  )}
+
                   {configTab === 'basic' && (
                     <div className="space-y-6">
                       <div className="space-y-1">
@@ -1894,6 +2238,30 @@ export default function App() {
                       <div className="grid grid-cols-1 gap-4">
                         {(configForm[editLang].introCards || []).map((card, idx) => (
                           <div key={idx} className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-4 relative">
+                            <div className="absolute top-4 right-10 z-10 flex gap-2">
+                              <button
+                                type="button"
+                                disabled={translatingIdx !== null}
+                                onClick={() => {
+                                  const fromL = editLang;
+                                  const toL = editLang === 'en' ? 'pt' : 'en';
+                                  translateSingleIntroCard(idx, fromL, toL);
+                                }}
+                                className="flex items-center gap-1 text-[10px] font-mono uppercase bg-orange-500/10 text-orange-500 border border-orange-500/20 px-2.5 py-1 rounded-md hover:bg-orange-500/20 transition-all font-bold disabled:opacity-50"
+                              >
+                                {translatingIdx === `card-${idx}` ? (
+                                  <>
+                                    <span className="w-2.5 h-2.5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
+                                    Translating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles size={11} className="animate-pulse" />
+                                    {editLang === 'en' ? "Translate to PT 🇵🇹" : "Translate to EN 🇬🇧"}
+                                  </>
+                                )}
+                              </button>
+                            </div>
                             <button 
                               type="button" 
                               onClick={() => {
@@ -1987,6 +2355,30 @@ export default function App() {
                         const dates = ensureStructuredDates(exp, editLang === 'pt');
                         return (
                           <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-4 relative group">
+                            <div className="absolute top-4 right-10 z-10 flex gap-2">
+                              <button
+                                type="button"
+                                disabled={translatingIdx !== null}
+                                onClick={() => {
+                                  const fromL = editLang;
+                                  const toL = editLang === 'en' ? 'pt' : 'en';
+                                  translateSingleExperience(idx, fromL, toL);
+                                }}
+                                className="flex items-center gap-1 text-[10px] font-mono uppercase bg-orange-500/10 text-orange-500 border border-orange-500/20 px-2.5 py-1 rounded-md hover:bg-orange-500/20 transition-all font-bold disabled:opacity-50"
+                              >
+                                {translatingIdx === `exp-${idx}` ? (
+                                  <>
+                                    <span className="w-2.5 h-2.5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
+                                    Translating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles size={11} className="animate-pulse" />
+                                    {editLang === 'en' ? "Translate to PT 🇵🇹" : "Translate to EN 🇬🇧"}
+                                  </>
+                                )}
+                              </button>
+                            </div>
                             <button 
                               type="button"
                               onClick={() => {
@@ -2250,6 +2642,30 @@ export default function App() {
                         const dates = ensureStructuredDates(edu, editLang === 'pt');
                         return (
                           <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-4 relative group">
+                            <div className="absolute top-4 right-10 z-10 flex gap-2">
+                              <button
+                                type="button"
+                                disabled={translatingIdx !== null}
+                                onClick={() => {
+                                  const fromL = editLang;
+                                  const toL = editLang === 'en' ? 'pt' : 'en';
+                                  translateSingleEducation(idx, fromL, toL);
+                                }}
+                                className="flex items-center gap-1 text-[10px] font-mono uppercase bg-orange-500/10 text-orange-500 border border-orange-500/20 px-2.5 py-1 rounded-md hover:bg-orange-500/20 transition-all font-bold disabled:opacity-50"
+                              >
+                                {translatingIdx === `edu-${idx}` ? (
+                                  <>
+                                    <span className="w-2.5 h-2.5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
+                                    Translating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles size={11} className="animate-pulse" />
+                                    {editLang === 'en' ? "Translate to PT 🇵🇹" : "Translate to EN 🇬🇧"}
+                                  </>
+                                )}
+                              </button>
+                            </div>
                             <button 
                               type="button"
                               onClick={() => {
@@ -2511,6 +2927,30 @@ export default function App() {
                     <div className="space-y-6">
                       {(configForm[editLang].certifications || []).map((cert, idx) => (
                         <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-4 relative group">
+                          <div className="absolute top-4 right-10 z-10 flex gap-2">
+                            <button
+                              type="button"
+                              disabled={translatingIdx !== null}
+                              onClick={() => {
+                                const fromL = editLang;
+                                const toL = editLang === 'en' ? 'pt' : 'en';
+                                translateSingleCert(idx, fromL, toL);
+                              }}
+                              className="flex items-center gap-1 text-[10px] font-mono uppercase bg-orange-500/10 text-orange-500 border border-orange-500/20 px-2.5 py-1 rounded-md hover:bg-orange-500/20 transition-all font-bold disabled:opacity-50"
+                            >
+                              {translatingIdx === `cert-${idx}` ? (
+                                  <>
+                                    <span className="w-2.5 h-2.5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
+                                    Translating...
+                                  </>
+                              ) : (
+                                  <>
+                                    <Sparkles size={11} className="animate-pulse" />
+                                    {editLang === 'en' ? "Translate to PT 🇵🇹" : "Translate to EN 🇬🇧"}
+                                  </>
+                              )}
+                            </button>
+                          </div>
                           <button 
                             type="button"
                             onClick={() => {
@@ -2699,6 +3139,30 @@ export default function App() {
                         <div className="space-y-4">
                           {(configForm[editLang].personalSkills || []).map((skill, idx) => (
                             <div key={idx} className="p-4 bg-black/20 border border-white/5 rounded-xl space-y-2 relative">
+                              <div className="absolute top-4 right-10 z-10 flex gap-2">
+                                <button
+                                  type="button"
+                                  disabled={translatingIdx !== null}
+                                  onClick={() => {
+                                    const fromL = editLang;
+                                    const toL = editLang === 'en' ? 'pt' : 'en';
+                                    translateSinglePersonalSkill(idx, fromL, toL);
+                                  }}
+                                  className="flex items-center gap-1 text-[10px] font-mono uppercase bg-orange-500/10 text-orange-500 border border-orange-500/20 px-2.5 py-1 rounded-md hover:bg-orange-500/20 transition-all font-bold disabled:opacity-50"
+                                >
+                                  {translatingIdx === `skill-${idx}` ? (
+                                      <>
+                                        <span className="w-2.5 h-2.5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
+                                        Translating...
+                                      </>
+                                  ) : (
+                                      <>
+                                        <Sparkles size={11} className="animate-pulse" />
+                                        {editLang === 'en' ? "Translate to PT 🇵🇹" : "Translate to EN 🇬🇧"}
+                                      </>
+                                  )}
+                                </button>
+                              </div>
                               <button 
                                 type="button" 
                                 onClick={() => {
