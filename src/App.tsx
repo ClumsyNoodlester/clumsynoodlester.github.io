@@ -709,7 +709,7 @@ const CV = React.forwardRef<HTMLDivElement, {
           </div>
         </section>
 
-        {/* Additional Technical Skills */}
+        {/* Technical Profile / Perfil Técnico */}
         {data.additionalSkillsText && (
           <section>
             <h2 className={`font-bold uppercase tracking-widest flex items-center gap-2.5 text-[#2d2d2d] ${isCompact ? 'text-sm mb-1.5' : 'text-lg mb-4'}`}>
@@ -3401,7 +3401,9 @@ export default function App() {
                       </div>
 
                       <div className="space-y-2">
-                        <h3 className="text-xs font-mono uppercase text-zinc-400 border-b border-white/5 pb-2">Technical Profile ({editLang.toUpperCase()})</h3>
+                        <h3 className="text-xs font-mono uppercase text-zinc-400 border-b border-white/5 pb-2">
+                          {editLang === 'pt' ? "Perfil Técnico" : "Technical Profile"} ({editLang.toUpperCase()})
+                        </h3>
                         <textarea
                           placeholder="e.g. Systems Administration, Networking, Cloud Services..."
                           value={configForm[editLang].additionalSkillsText || ''}
