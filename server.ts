@@ -64,7 +64,8 @@ async function startServer() {
       }
     } catch (error: any) {
       console.error("Gemini translation error:", error);
-      res.status(500).json({ error: "Translation failed" });
+      const errMsg = error?.message || String(error);
+      res.status(500).json({ error: `Translation failed: ${errMsg}` });
     }
   });
 
