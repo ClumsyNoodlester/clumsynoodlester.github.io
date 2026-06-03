@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { QRCodeSVG } from 'qrcode.react';
 import { 
   Github, 
   Linkedin, 
@@ -150,6 +151,7 @@ interface LanguageData {
   certifications: Certification[];
   personalSkills: PersonalSkill[];
   introCards: IntroCard[];
+  additionalSkillsText?: string;
 }
 
 interface SiteConfig {
@@ -217,7 +219,8 @@ const DEFAULT_CONFIG: SiteConfig = {
         description: "Learning to manage and optimize complex server environments and networks.",
         icon: "Terminal"
       }
-    ]
+    ],
+    additionalSkillsText: "Systems Administration, Systems Architecture, Networking (TCP/IP, DNS, DHCP), Cybersecurity principles, ISO/IEC 27001 awareness, Java, C, Python, Unified Modeling Language (UML), SQL & Database Fundamentals."
   },
   pt: {
     fullName: "Daniil Kachkovskyy",
@@ -274,7 +277,8 @@ const DEFAULT_CONFIG: SiteConfig = {
         description: "Aprendendo a gerir e otimizar ambientes de servidores e redes complexos.",
         icon: "Terminal"
       }
-    ]
+    ],
+    additionalSkillsText: "Administração de Sistemas, Arquitetura de Sistemas, Redes (TCP/IP, DNS, DHCP), Princípios de Cibersegurança, Sensibilização para a ISO/IEC 27001, Java, C, Python, Linguagem de Modelação Unificada (UML), Fundamentos de SQL & Bases de Dados."
   },
   profileImage: "https://picsum.photos/seed/daniil/400/400",
   contacts: {
@@ -473,14 +477,72 @@ const sortTimelineItems = <T extends { period: string; startMonth?: string; star
 
 // --- Components ---
 
-const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | 'pt', isCompact?: boolean }>(({ config, lang, isCompact = false }, ref) => {
+const CV = React.forwardRef<HTMLDivElement, { 
+  config: SiteConfig, 
+  lang: 'en' | 'pt', 
+  isCompact?: boolean,
+  onHeightRatioChange?: (ratio: number) => void
+}>(({ config, lang, isCompact = false, onHeightRatioChange }, ref) => {
   const data = config[lang];
   const isPt = lang === 'pt';
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const mainContentRef = useRef<HTMLDivElement>(null);
+
+  // Expose the container node to parent refs for printing functionality
+  React.useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
+
+  useEffect(() => {
+    const updateHeights = () => {
+      const parentH = containerRef.current?.clientHeight || 0;
+      const sidebarH = sidebarRef.current?.scrollHeight || 0;
+      const mainH = mainContentRef.current?.scrollHeight || 0;
+      
+      const currentParentH = parentH > 0 ? parentH : 1123;
+      
+      const sidebarRatio = sidebarH / currentParentH;
+      const mainRatio = mainH / currentParentH;
+      const maxRatio = Math.max(sidebarRatio, mainRatio);
+      
+      if (onHeightRatioChange) {
+        onHeightRatioChange(maxRatio);
+      }
+    };
+    
+    // Initial run
+    updateHeights();
+    
+    // Delayed run to allow initial CSS styles layout parsing
+    const timer = setTimeout(updateHeights, 150);
+    
+    window.addEventListener('resize', updateHeights);
+    
+    let observer: MutationObserver | null = null;
+    if (containerRef.current) {
+      observer = new MutationObserver(updateHeights);
+      observer.observe(containerRef.current, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+    }
+    
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateHeights);
+      if (observer) observer.disconnect();
+    };
+  }, [config, lang, isCompact, onHeightRatioChange]);
+
+  const portfolioUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}${window.location.pathname}`
+    : (config.contacts.website.startsWith('http') ? config.contacts.website : `https://${config.contacts.website}`);
+
   return (
-    <div ref={ref} className="bg-white text-black font-sans w-[210mm] h-[297mm] flex shadow-2xl overflow-hidden print:shadow-none print:flex" style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
+    <div ref={containerRef} className="cv-main-wrapper bg-white text-black font-sans w-[210mm] h-[297mm] flex shadow-2xl overflow-hidden print:shadow-none print:flex" style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
       {/* Sidebar */}
-      <div className={`w-[32%] bg-[#2d2d2d] text-white flex flex-col shrink-0 ${isCompact ? 'p-4 gap-4' : 'p-6 gap-6'}`} style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
+      <div ref={sidebarRef} className={`w-[32%] bg-[#2d2d2d] text-white flex flex-col shrink-0 ${isCompact ? 'p-4 gap-4' : 'p-6 gap-6'}`} style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
         {/* Profile Image */}
         <div className="flex justify-center">
           <div className={`rounded-full border-4 border-white/10 overflow-hidden bg-zinc-800 transition-all duration-300 ${isCompact ? 'w-24 h-24' : 'w-40 h-40'}`}>
@@ -583,10 +645,26 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
             ))}
           </ul>
         </section>
+
+        {/* QR Code Section */}
+        <div className="mt-auto pt-3 border-t border-white/10 flex flex-col items-center gap-1">
+          <div className="bg-white p-1 rounded-lg">
+            <QRCodeSVG 
+              value={portfolioUrl}
+              size={isCompact ? 60 : 76}
+              bgColor="#ffffff"
+              fgColor="#000000"
+              level="M"
+            />
+          </div>
+          <p className="text-[7.5px] font-mono text-center uppercase tracking-wider text-zinc-400">
+            {isPt ? 'Portfólio Interativo' : 'Interactive Portfolio'}
+          </p>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col ${isCompact ? 'p-6 py-5 gap-4' : 'p-10 gap-6'}`}>
+      <div ref={mainContentRef} className={`flex-1 flex flex-col ${isCompact ? 'p-6 py-5 gap-4' : 'p-10 gap-6'}`}>
         {/* Header */}
         <header>
           <h1 className={`font-black text-[#2d2d2d] uppercase tracking-tight leading-none ${isCompact ? 'text-2xl mb-1' : 'text-4xl mb-2'}`}>
@@ -632,6 +710,21 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
             ))}
           </div>
         </section>
+
+        {/* Additional Technical Skills */}
+        {data.additionalSkillsText && (
+          <section>
+            <h2 className={`font-bold uppercase tracking-widest flex items-center gap-2.5 text-[#2d2d2d] ${isCompact ? 'text-sm mb-1.5' : 'text-lg mb-4'}`}>
+              <Code2 size={isCompact ? 16 : 18} className="text-[#2d2d2d]" />
+              {isPt ? 'Perfil Técnico' : 'Technical Profile'}
+            </h2>
+            <div className="pl-2">
+              <p className={`leading-relaxed text-zinc-700 text-justify whitespace-pre-line ${isCompact ? 'text-[10.5px]' : 'text-xs'}`}>
+                {data.additionalSkillsText}
+              </p>
+            </div>
+          </section>
+        )}
 
         {/* Certifications */}
         <section>
@@ -945,6 +1038,29 @@ export default function App() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const cvRef = useRef<HTMLDivElement>(null);
   const [isCompact, setIsCompact] = useState(true);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [cvHeightRatio, setCvHeightRatio] = useState<number>(0);
+
+  const allTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    projects.forEach(p => {
+      if (Array.isArray(p.tags)) {
+        p.tags.forEach(t => {
+          if (t && t.trim() !== "") {
+            tagsSet.add(t.trim());
+          }
+        });
+      }
+    });
+    return Array.from(tagsSet).sort((a, b) => a.localeCompare(b));
+  }, [projects]);
+
+  const filteredProjects = useMemo(() => {
+    if (!selectedTag) return projects;
+    return projects.filter(p => 
+      Array.isArray(p.tags) && p.tags.some(t => t.trim().toLowerCase() === selectedTag.toLowerCase())
+    );
+  }, [projects, selectedTag]);
 
   const handlePrint = useReactToPrint({
     contentRef: cvRef,
@@ -1341,9 +1457,16 @@ export default function App() {
             return { ...skill, name: nameT, description: descT };
           })
         );
+        const additionalSkillsT = configForm[fromLang].additionalSkillsText 
+          ? await translateApiCall(configForm[fromLang].additionalSkillsText, toLang)
+          : '';
         setConfigForm(prev => ({
           ...prev,
-          [toLang]: { ...prev[toLang], personalSkills: translatedSkills }
+          [toLang]: { 
+            ...prev[toLang], 
+            personalSkills: translatedSkills,
+            additionalSkillsText: additionalSkillsT
+          }
         }));
       }
     } catch (e) {
@@ -1600,7 +1723,60 @@ export default function App() {
           </button>
         </div>
 
-        <CV ref={cvRef} config={siteConfig} lang={lang} isCompact={isCompact} />
+        {/* Real-time A4 height progress bar */}
+        <div className="no-print w-full max-w-[210mm] bg-zinc-900 border border-white/10 rounded-2xl p-5 mb-6 text-white shadow-2xl space-y-3">
+          <div className="flex flex-wrap justify-between items-center gap-2">
+            <div className="flex items-center gap-2">
+              <span className={`w-2.5 h-2.5 rounded-full ${cvHeightRatio > 1.0 ? 'bg-red-500 animate-pulse' : cvHeightRatio > 0.93 ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+              <span className="text-xs font-mono uppercase tracking-widest text-zinc-300 font-bold">
+                {lang === 'en' ? 'A4 Single-Page Fit Gauge' : 'Medidor de Encaixe em Página Única A4'}
+              </span>
+            </div>
+            <span className="text-xs font-mono font-bold text-zinc-400">
+              {Math.min(Math.round(cvHeightRatio * 100), 120)}% {lang === 'en' ? 'capacity used' : 'da capacidade usada'}
+            </span>
+          </div>
+          
+          <div className="w-full bg-black/40 h-2.5 rounded-full overflow-hidden p-0.5 border border-white/5">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${
+                cvHeightRatio > 1.0 
+                  ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse' 
+                  : cvHeightRatio > 0.93 
+                    ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' 
+                    : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'
+              }`} 
+              style={{ width: `${Math.min(cvHeightRatio * 100, 100)}%` }}
+            />
+          </div>
+          
+          <div className="flex justify-between items-start gap-4 flex-wrap sm:flex-nowrap">
+            <p className="text-[11px] text-zinc-400 leading-normal">
+              {cvHeightRatio > 1.0 
+                ? (lang === 'en' ? 'Content exceeds A4 page! Some content is cut off or will spill over. Switch to Compact mode or reduce text.' : 'O conteúdo excede os limites A4! Será cortado ou dividido. Ative o modo Compacto ou reduza o texto.')
+                : cvHeightRatio > 0.93
+                  ? (lang === 'en' ? 'Almost full. Consider using Compact layout or short descriptions.' : 'Quase cheio. Considere usar o layout Compacto ou descrições curtas.')
+                  : (lang === 'en' ? 'Your CV fits perfectly on a single A4 page.' : 'O seu currículo cabe perfeitamente numa única página A4.')
+              }
+            </p>
+            <span className={`text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded whitespace-nowrap ${
+              cvHeightRatio > 1.0 
+                ? 'bg-red-500/15 text-red-400 border border-red-500/20' 
+                : cvHeightRatio > 0.93 
+                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20' 
+                  : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+            }`}>
+              {cvHeightRatio > 1.0 
+                ? (lang === 'en' ? 'Overflow (Page Exceeded)' : 'Aviso (Página Excedida)')
+                : cvHeightRatio > 0.93
+                  ? (lang === 'en' ? 'Nearing A4 Limit' : 'Próximo do Limite')
+                  : (lang === 'en' ? 'Perfect Setup' : 'Ajuste Ideal')
+              }
+            </span>
+          </div>
+        </div>
+
+        <CV ref={cvRef} config={siteConfig} lang={lang} isCompact={isCompact} onHeightRatioChange={setCvHeightRatio} />
       </div>
     );
   }
@@ -1778,8 +1954,41 @@ export default function App() {
               </Section>
 
               <Section id="projects" title={lang === 'en' ? "Development Pipeline" : "Pipeline de Desenvolvimento"} activeSection={activeSection}>
+                {/* Tag Filtering System */}
+                {allTags.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 border-b border-white/5 pb-5 mb-5 no-print">
+                    <span className="text-[10px] font-mono uppercase text-zinc-500 mr-1.5">{lang === 'en' ? 'Filter Tag:' : 'Filtrar Tag:'}</span>
+                    <button
+                      onClick={() => setSelectedTag(null)}
+                      className={`px-3 py-1.5 text-xs font-mono rounded-lg transition-all border cursor-pointer ${
+                        selectedTag === null
+                          ? 'bg-orange-500 text-black font-bold border-orange-500'
+                          : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                      }`}
+                    >
+                      {lang === 'en' ? 'ALL' : 'TODOS'} ({projects.length})
+                    </button>
+                    {allTags.map(tag => {
+                      const count = projects.filter(p => Array.isArray(p.tags) && p.tags.some(t => t.trim().toLowerCase() === tag.toLowerCase())).length;
+                      return (
+                        <button
+                          key={tag}
+                          onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                          className={`px-3 py-1.5 text-xs font-mono rounded-lg transition-all border cursor-pointer ${
+                            selectedTag?.toLowerCase() === tag.toLowerCase()
+                              ? 'bg-orange-500 text-black font-bold border-orange-500'
+                              : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                          }`}
+                        >
+                          {tag.toUpperCase()} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-6">
-                  {projects.map(project => (
+                  {filteredProjects.map(project => (
                     <div key={project.id}>
                       <ProjectCard 
                         project={project}
@@ -1875,6 +2084,17 @@ export default function App() {
                       ))}
                     </div>
                   </div>
+
+                  {siteConfig[lang].additionalSkillsText && (
+                    <div className="space-y-4">
+                      <h4 className="text-white font-mono text-sm uppercase border-b border-white/5 pb-2">
+                        {lang === 'en' ? 'Technical Profile' : 'Perfil Técnico'}
+                      </h4>
+                      <p className="text-sm text-zinc-400 font-mono leading-relaxed bg-zinc-900/40 p-4 rounded-xl border border-white/5">
+                        {siteConfig[lang].additionalSkillsText}
+                      </p>
+                    </div>
+                  )}
 
                   <div className="space-y-4">
                     <h4 className="text-white font-mono text-sm uppercase border-b border-white/5 pb-2">{lang === 'en' ? 'Languages' : 'Idiomas'}</h4>
@@ -3154,6 +3374,19 @@ export default function App() {
                         <button type="button" onClick={() => setConfigForm({ ...configForm, technicalSkills: [...configForm.technicalSkills, { name: '', level: 5 }] })} className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1">
                           <Plus size={12} /> Add Tech Skill
                         </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h3 className="text-xs font-mono uppercase text-zinc-400 border-b border-white/5 pb-2">Technical Profile ({editLang.toUpperCase()})</h3>
+                        <textarea
+                          placeholder="e.g. Systems Administration, Networking, Cloud Services..."
+                          value={configForm[editLang].additionalSkillsText || ''}
+                          onChange={e => setConfigForm({
+                            ...configForm,
+                            [editLang]: { ...configForm[editLang], additionalSkillsText: e.target.value }
+                          })}
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs outline-none focus:border-orange-500/50 min-h-[100px] text-zinc-200"
+                        />
                       </div>
 
                       <div className="space-y-4">
