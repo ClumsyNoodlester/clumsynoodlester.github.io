@@ -477,19 +477,6 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
   const data = config[lang];
   const isPt = lang === 'pt';
 
-  const StarRating = ({ level }: { level: number }) => (
-    <div className="flex gap-0.5" style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
-      {[1, 2, 3, 4, 5].map((s) => (
-        <Star 
-          key={s} 
-          size={10} 
-          className={s <= level ? "fill-white text-white" : "text-zinc-600"} 
-          style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
-        />
-      ))}
-    </div>
-  );
-
   return (
     <div ref={ref} className="bg-white text-black font-sans w-[210mm] h-[297mm] flex shadow-2xl overflow-hidden print:shadow-none print:flex" style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
       {/* Sidebar */}
@@ -552,14 +539,17 @@ const CV = React.forwardRef<HTMLDivElement, { config: SiteConfig, lang: 'en' | '
             <Cpu size={isCompact ? 12 : 14} />
             {isPt ? 'Competências Técnicas' : 'Technical Skills'}
           </h2>
-          <ul className={isCompact ? 'space-y-1' : 'space-y-2'}>
+          <div className="flex flex-wrap gap-1.5">
             {config.technicalSkills.map((skill, i) => (
-              <li key={i} className="flex justify-between items-center text-[10px]">
-                <span className="font-mono truncate mr-1">{skill.name}</span>
-                <StarRating level={skill.level} />
-              </li>
+              <span 
+                key={i} 
+                className="bg-white/10 text-white font-mono text-[9px] px-1.5 py-0.5 rounded border border-white/5 whitespace-nowrap"
+                style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
+              >
+                {skill.name}
+              </span>
             ))}
-          </ul>
+          </div>
         </section>
 
         {/* Personal Skills */}
@@ -3140,7 +3130,7 @@ export default function App() {
 
                   {configTab === 'skills' && (
                     <div className="space-y-8">
-                      <div className="space-y-4">
+                       <div className="space-y-4">
                         <h3 className="text-xs font-mono uppercase text-zinc-400 border-b border-white/5 pb-2">Technical Skills</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {(configForm.technicalSkills || []).map((skill, idx) => (
@@ -3155,24 +3145,13 @@ export default function App() {
                                 }}
                                 className="flex-1 bg-black/40 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-orange-500/50"
                               />
-                              <select 
-                                value={skill.level}
-                                onChange={e => {
-                                  const newSkills = [...configForm.technicalSkills];
-                                  newSkills[idx] = { ...newSkills[idx], level: parseInt(e.target.value) };
-                                  setConfigForm({ ...configForm, technicalSkills: newSkills });
-                                }}
-                                className="bg-black/40 border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-orange-500/50 text-white"
-                              >
-                                {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v} Stars</option>)}
-                              </select>
                               <button type="button" onClick={() => setConfigForm({ ...configForm, technicalSkills: configForm.technicalSkills.filter((_, i) => i !== idx) })} className="text-zinc-600 hover:text-red-500">
                                 <Trash2 size={14} />
                               </button>
                             </div>
                           ))}
                         </div>
-                        <button type="button" onClick={() => setConfigForm({ ...configForm, technicalSkills: [...configForm.technicalSkills, { name: '', level: 3 }] })} className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1">
+                        <button type="button" onClick={() => setConfigForm({ ...configForm, technicalSkills: [...configForm.technicalSkills, { name: '', level: 5 }] })} className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1">
                           <Plus size={12} /> Add Tech Skill
                         </button>
                       </div>
