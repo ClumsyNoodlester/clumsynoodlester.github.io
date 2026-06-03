@@ -5,7 +5,6 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { QRCodeSVG } from 'qrcode.react';
 import { 
   Github, 
   Linkedin, 
@@ -649,12 +648,11 @@ const CV = React.forwardRef<HTMLDivElement, {
         {/* QR Code Section */}
         <div className="mt-auto pt-3 border-t border-white/10 flex flex-col items-center gap-1">
           <div className="bg-white p-1 rounded-lg">
-            <QRCodeSVG 
-              value={portfolioUrl}
-              size={isCompact ? 60 : 76}
-              bgColor="#ffffff"
-              fgColor="#000000"
-              level="M"
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=${isCompact ? 60 : 76}x${isCompact ? 60 : 76}&data=${encodeURIComponent(portfolioUrl)}`}
+              alt="QR Code Portfolio"
+              style={{ width: isCompact ? '60px' : '76px', height: isCompact ? '60px' : '76px' }}
+              className="object-contain"
             />
           </div>
           <p className="text-[7.5px] font-mono text-center uppercase tracking-wider text-zinc-400">
@@ -1160,28 +1158,28 @@ export default function App() {
 
   const [isTranslating, setIsTranslating] = useState(false);
   const [translatingIdx, setTranslatingIdx] = useState<string | null>(null);
+  const [translationError, setTranslationError] = useState<string | null>(null);
 
   const translateApiCall = async (text: string | string[], targetL: 'en' | 'pt'): Promise<any> => {
     if (!text || (typeof text === 'string' && !text.trim()) || (Array.isArray(text) && text.length === 0)) {
       return text;
     }
-    try {
-      const res = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, targetLang: targetL })
-      });
-      if (!res.ok) throw new Error("Translation failed");
-      const data = await res.json();
-      return data.translated;
-    } catch (e) {
-      console.error("Translation api call error", e);
-      return text;
+    const res = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, targetLang: targetL })
+    });
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody.error || "Translation API request failed");
     }
+    const data = await res.json();
+    return data.translated;
   };
 
   const translateSingleExperience = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
     setTranslatingIdx(`exp-${idx}`);
+    setTranslationError(null);
     try {
       const sourceExp = configForm[fromLang].experiences[idx];
       if (!sourceExp) return;
@@ -1211,8 +1209,9 @@ export default function App() {
           experiences: updatedToExps
         }
       }));
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to translate experience", e);
+      setTranslationError(e.message || "Failed to translate experience. Make sure GEMINI_API_KEY is formatted correctly.");
     } finally {
       setTranslatingIdx(null);
     }
@@ -1220,6 +1219,7 @@ export default function App() {
 
   const translateSingleEducation = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
     setTranslatingIdx(`edu-${idx}`);
+    setTranslationError(null);
     try {
       const sourceEdu = configForm[fromLang].education[idx];
       if (!sourceEdu) return;
@@ -1249,8 +1249,9 @@ export default function App() {
           education: updatedToEdu
         }
       }));
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to translate education", e);
+      setTranslationError(e.message || "Failed to translate education. Check if your Gemini API key is configured.");
     } finally {
       setTranslatingIdx(null);
     }
@@ -1258,6 +1259,7 @@ export default function App() {
 
   const translateSingleCert = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
     setTranslatingIdx(`cert-${idx}`);
+    setTranslationError(null);
     try {
       const sourceCert = configForm[fromLang].certifications[idx];
       if (!sourceCert) return;
@@ -1281,8 +1283,9 @@ export default function App() {
           certifications: updatedToCerts
         }
       }));
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to translate certification", e);
+      setTranslationError(e.message || "Failed to translate certification. Please specify GEMINI_API_KEY in secrets.");
     } finally {
       setTranslatingIdx(null);
     }
@@ -1290,6 +1293,7 @@ export default function App() {
 
   const translateSinglePersonalSkill = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
     setTranslatingIdx(`skill-${idx}`);
+    setTranslationError(null);
     try {
       const sourceSkill = configForm[fromLang].personalSkills[idx];
       if (!sourceSkill) return;
@@ -1310,8 +1314,9 @@ export default function App() {
           personalSkills: updatedToSkills
         }
       }));
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to translate personal skill", e);
+      setTranslationError(e.message || "Failed to translate skill. Ensure your AI Studio settings are correct.");
     } finally {
       setTranslatingIdx(null);
     }
@@ -1319,6 +1324,7 @@ export default function App() {
 
   const translateSingleIntroCard = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
     setTranslatingIdx(`card-${idx}`);
+    setTranslationError(null);
     try {
       const sourceCard = configForm[fromLang].introCards[idx];
       if (!sourceCard) return;
@@ -1340,8 +1346,9 @@ export default function App() {
           introCards: updatedToCards
         }
       }));
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to translate intro card", e);
+      setTranslationError(e.message || "Failed to translate card. Check Google Gemini integration status.");
     } finally {
       setTranslatingIdx(null);
     }
@@ -1349,6 +1356,7 @@ export default function App() {
 
   const translateEntireSection = async (section: string, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
     setIsTranslating(true);
+    setTranslationError(null);
     try {
       if (section === 'basic') {
         const jobTitleT = await translateApiCall(configForm[fromLang].jobTitle, toLang);
@@ -1469,8 +1477,9 @@ export default function App() {
           }
         }));
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Section translation failed", e);
+      setTranslationError(e.message || "Section translation failed. Please verify that your Google Gemini API Key is configured in settings and try again.");
     } finally {
       setIsTranslating(false);
     }
@@ -1820,7 +1829,10 @@ export default function App() {
                   Messages ({messages.length})
                 </button>
                 <button 
-                  onClick={() => setIsEditingConfig(true)}
+                  onClick={() => {
+                    setTranslationError(null);
+                    setIsEditingConfig(true);
+                  }}
                   className="text-[10px] font-mono uppercase tracking-widest text-orange-500 hover:text-orange-400 transition-colors flex items-center gap-2"
                 >
                   <Edit3 size={12} />
@@ -2317,7 +2329,10 @@ export default function App() {
                     <button
                       key={tab.id}
                       type="button"
-                      onClick={() => setConfigTab(tab.id as any)}
+                      onClick={() => {
+                        setConfigTab(tab.id as any);
+                        setTranslationError(null);
+                      }}
                       className={`flex items-center gap-2 px-4 py-3 text-[10px] font-mono uppercase tracking-widest border-b-2 transition-all whitespace-nowrap ${
                         configTab === tab.id 
                           ? 'border-orange-500 text-orange-500 bg-orange-500/5' 
@@ -2332,34 +2347,43 @@ export default function App() {
 
                 <form onSubmit={handleUpdateConfig} className="flex-1 overflow-y-auto pr-2 space-y-8 custom-scrollbar">
                   {configTab !== 'contacts' && configTab !== 'languages' && (
-                    <div className="flex items-center justify-between p-3.5 bg-orange-500/10 border border-orange-500/20 rounded-xl text-xs flex-shrink-0">
-                      <div className="flex items-center gap-2">
-                        <Sparkles size={14} className="text-orange-500 animate-pulse flex-shrink-0" />
-                        <span className="text-zinc-300">
-                          {editLang === 'en' 
-                            ? "Translate this entire section's English fields to Portuguese!" 
-                            : "Translate this entire section's Portuguese fields to English!"}
-                        </span>
+                    <div className="flex flex-col gap-2 flex-shrink-0">
+                      <div className="flex items-center justify-between p-3.5 bg-orange-500/10 border border-orange-500/20 rounded-xl text-xs">
+                        <div className="flex items-center gap-2">
+                          <Sparkles size={14} className="text-orange-500 animate-pulse flex-shrink-0" />
+                          <span className="text-zinc-300">
+                            {editLang === 'en' 
+                              ? "Translate this entire section's English fields to Portuguese!" 
+                              : "Translate this entire section's Portuguese fields to English!"}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={isTranslating}
+                          onClick={() => {
+                            const fromL = editLang;
+                            const toL = editLang === 'en' ? 'pt' : 'en';
+                            translateEntireSection(configTab, fromL, toL);
+                          }}
+                          className="px-3 py-1.5 bg-orange-500 text-black font-mono font-bold rounded-lg hover:bg-orange-400 transition-colors uppercase text-[10px] disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
+                        >
+                          {isTranslating ? (
+                            <>
+                              <span className="w-2 h-2 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                              Translating...
+                            </>
+                          ) : (
+                            `Translate to ${editLang === 'en' ? "PT 🇵🇹" : "EN 🇬🇧"}`
+                          )}
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        disabled={isTranslating}
-                        onClick={() => {
-                          const fromL = editLang;
-                          const toL = editLang === 'en' ? 'pt' : 'en';
-                          translateEntireSection(configTab, fromL, toL);
-                        }}
-                        className="px-3 py-1.5 bg-orange-500 text-black font-mono font-bold rounded-lg hover:bg-orange-400 transition-colors uppercase text-[10px] disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
-                      >
-                        {isTranslating ? (
-                          <>
-                            <span className="w-2 h-2 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
-                            Translating...
-                          </>
-                        ) : (
-                          `Translate to ${editLang === 'en' ? "PT 🇵🇹" : "EN 🇬🇧"}`
-                        )}
-                      </button>
+
+                      {translationError && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400 font-mono flex items-start gap-2">
+                          <span className="font-bold flex-shrink-0">⚠️ Error:</span>
+                          <span>{translationError}</span>
+                        </div>
+                      )}
                     </div>
                   )}
 
