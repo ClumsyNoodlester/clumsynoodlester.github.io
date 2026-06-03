@@ -151,6 +151,7 @@ interface LanguageData {
   personalSkills: PersonalSkill[];
   introCards: IntroCard[];
   additionalSkillsText?: string;
+  languages?: Language[];
 }
 
 interface SiteConfig {
@@ -159,7 +160,7 @@ interface SiteConfig {
   profileImage: string;
   contacts: ContactInfo;
   technicalSkills: TechSkill[];
-  languages: Language[];
+  languages?: Language[];
 }
 
 const DEFAULT_CONFIG: SiteConfig = {
@@ -219,7 +220,12 @@ const DEFAULT_CONFIG: SiteConfig = {
         icon: "Terminal"
       }
     ],
-    additionalSkillsText: "Systems Administration, Systems Architecture, Networking (TCP/IP, DNS, DHCP), Cybersecurity principles, ISO/IEC 27001 awareness, Java, C, Python, Unified Modeling Language (UML), SQL & Database Fundamentals."
+    additionalSkillsText: "Systems Administration, Systems Architecture, Networking (TCP/IP, DNS, DHCP), Cybersecurity principles, ISO/IEC 27001 awareness, Java, C, Python, Unified Modeling Language (UML), SQL & Database Fundamentals.",
+    languages: [
+      { name: 'Portuguese', level: 'Native' },
+      { name: 'English', level: 'Fluent' },
+      { name: 'Russian', level: 'Basic' }
+    ]
   },
   pt: {
     fullName: "Daniil Kachkovskyy",
@@ -277,7 +283,12 @@ const DEFAULT_CONFIG: SiteConfig = {
         icon: "Terminal"
       }
     ],
-    additionalSkillsText: "Administração de Sistemas, Arquitetura de Sistemas, Redes (TCP/IP, DNS, DHCP), Princípios de Cibersegurança, Sensibilização para a ISO/IEC 27001, Java, C, Python, Linguagem de Modelação Unificada (UML), Fundamentos de SQL & Bases de Dados."
+    additionalSkillsText: "Administração de Sistemas, Arquitetura de Sistemas, Redes (TCP/IP, DNS, DHCP), Princípios de Cibersegurança, Sensibilização para a ISO/IEC 27001, Java, C, Python, Linguagem de Modelação Unificada (UML), Fundamentos de SQL & Bases de Dados.",
+    languages: [
+      { name: 'Português', level: 'Nativo' },
+      { name: 'Inglês', level: 'Fluente' },
+      { name: 'Russo', level: 'Básico' }
+    ]
   },
   profileImage: "https://picsum.photos/seed/daniil/400/400",
   contacts: {
@@ -636,7 +647,7 @@ const CV = React.forwardRef<HTMLDivElement, {
             {isPt ? 'Linguísticos' : 'Languages'}
           </h2>
           <ul className={`text-[10px] ${isCompact ? 'space-y-1' : 'space-y-2'}`}>
-            {config.languages.map((lang, i) => (
+            {(data.languages || config.languages || []).map((lang, i) => (
               <li key={i} className="flex items-center gap-1.5">
                 <span className="font-bold truncate">{lang.name}</span>
                 <span className="text-zinc-400">— {lang.level}</span>
@@ -1459,6 +1470,37 @@ export default function App() {
     }
   };
 
+  const translateSingleLanguage = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
+    setTranslatingIdx(`lang-${idx}`);
+    setTranslationError(null);
+    try {
+      const sourceLang = configForm[fromLang].languages?.[idx];
+      if (!sourceLang) return;
+
+      const nameTranslated = await translateApiCall(sourceLang.name, toLang);
+      const levelTranslated = await translateApiCall(sourceLang.level, toLang);
+
+      const updatedToLangs = [...(configForm[toLang].languages || [])];
+      updatedToLangs[idx] = {
+        name: nameTranslated,
+        level: levelTranslated,
+      };
+
+      setConfigForm(prev => ({
+        ...prev,
+        [toLang]: {
+          ...prev[toLang],
+          languages: updatedToLangs
+        }
+      }));
+    } catch (e: any) {
+      console.error("Failed to translate language", e);
+      setTranslationError(e.message || "Failed to translate language. Check Google Gemini integration status.");
+    } finally {
+      setTranslatingIdx(null);
+    }
+  };
+
   const translateEntireSection = async (section: string, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
     setIsTranslating(true);
     setTranslationError(null);
@@ -1581,6 +1623,21 @@ export default function App() {
             additionalSkillsText: additionalSkillsT
           }
         }));
+      } else if (section === 'languages') {
+        const translatedLangs = await Promise.all(
+          (configForm[fromLang].languages || []).map(async (langItem) => {
+            const nameT = await translateApiCall(langItem.name, toLang);
+            const levelT = await translateApiCall(langItem.level, toLang);
+            return { name: nameT, level: levelT };
+          })
+        );
+        setConfigForm(prev => ({
+          ...prev,
+          [toLang]: { 
+            ...prev[toLang], 
+            languages: translatedLangs
+          }
+        }));
       }
     } catch (e: any) {
       console.error("Section translation failed", e);
@@ -1619,12 +1676,14 @@ export default function App() {
           en: {
             ...DEFAULT_CONFIG.en,
             ...(data.en || {}),
-            introCards: data.en?.introCards || DEFAULT_CONFIG.en.introCards
+            introCards: data.en?.introCards || DEFAULT_CONFIG.en.introCards,
+            languages: data.en?.languages || data.languages || DEFAULT_CONFIG.en.languages
           },
           pt: {
             ...DEFAULT_CONFIG.pt,
             ...(data.pt || {}),
-            introCards: data.pt?.introCards || DEFAULT_CONFIG.pt.introCards
+            introCards: data.pt?.introCards || DEFAULT_CONFIG.pt.introCards,
+            languages: data.pt?.languages || data.languages || DEFAULT_CONFIG.pt.languages
           }
         };
 
@@ -2216,7 +2275,7 @@ export default function App() {
                   <div className="space-y-4">
                     <h4 className="text-white font-mono text-sm uppercase border-b border-white/5 pb-2">{lang === 'en' ? 'Languages' : 'Idiomas'}</h4>
                     <div className="grid grid-cols-3 gap-4">
-                      {siteConfig.languages.map(l => (
+                      {(siteConfig[lang].languages || siteConfig.languages || []).map(l => (
                         <div key={l.name} className="text-center">
                           <div className="text-white font-bold">{l.name}</div>
                           <div className="text-[10px] text-zinc-500 uppercase">{l.level}</div>
@@ -2451,7 +2510,7 @@ export default function App() {
                 </div>
 
                 <form onSubmit={handleUpdateConfig} className="flex-1 overflow-y-auto pr-2 space-y-8 custom-scrollbar">
-                  {configTab !== 'contacts' && configTab !== 'languages' && (
+                  {configTab !== 'contacts' && (
                     <div className="flex flex-col gap-2 flex-shrink-0">
                       {/* GitHub Pages API Key setting */}
                       <div className="bg-zinc-800/40 border border-white/5 p-3 rounded-xl space-y-2 text-xs">
@@ -3682,34 +3741,90 @@ export default function App() {
 
                   {configTab === 'languages' && (
                     <div className="space-y-4">
-                      {configForm.languages.map((lang, idx) => (
-                        <div key={idx} className="flex gap-2 items-center bg-black/20 p-2 rounded-lg border border-white/5">
+                      {((configForm[editLang].languages || configForm.languages || [])).map((lang, idx) => (
+                        <div key={idx} className="flex gap-2 items-center bg-black/20 p-2.5 rounded-xl border border-white/5 relative">
                           <input 
                             placeholder="Language Name"
                             value={lang.name}
                             onChange={e => {
-                              const newLangs = [...configForm.languages];
+                              const newLangs = [...(configForm[editLang].languages || configForm.languages || [])];
                               newLangs[idx] = { ...newLangs[idx], name: e.target.value };
-                              setConfigForm({ ...configForm, languages: newLangs });
+                              setConfigForm({ 
+                                ...configForm, 
+                                [editLang]: { ...configForm[editLang], languages: newLangs } 
+                              });
                             }}
-                            className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                            className="flex-1 bg-black/40 border border-white/10 rounded focus:border-orange-500/50 px-3 py-1.5 text-xs outline-none text-white"
                           />
                           <input 
-                            placeholder="Level (e.g. Native)"
+                            placeholder="Level (e.g. Native / Fluente)"
                             value={lang.level}
                             onChange={e => {
-                              const newLangs = [...configForm.languages];
+                              const newLangs = [...(configForm[editLang].languages || configForm.languages || [])];
                               newLangs[idx] = { ...newLangs[idx], level: e.target.value };
-                              setConfigForm({ ...configForm, languages: newLangs });
+                              setConfigForm({ 
+                                ...configForm, 
+                                [editLang]: { ...configForm[editLang], languages: newLangs } 
+                              });
                             }}
-                            className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-1.5 text-xs outline-none focus:border-orange-500/50"
+                            className="flex-1 bg-black/40 border border-white/10 rounded focus:border-orange-500/50 px-3 py-1.5 text-xs outline-none text-white"
                           />
-                          <button type="button" onClick={() => setConfigForm({ ...configForm, languages: configForm.languages.filter((_, i) => i !== idx) })} className="text-zinc-600 hover:text-red-500">
+                          
+                          <button
+                            type="button"
+                            disabled={translatingIdx !== null}
+                            onClick={() => {
+                              const fromL = editLang;
+                              const toL = editLang === 'en' ? 'pt' : 'en';
+                              translateSingleLanguage(idx, fromL, toL);
+                            }}
+                            className="flex items-center gap-1 text-[10px] h-8 font-mono bg-orange-500/10 text-orange-500 border border-orange-500/20 px-2.5 py-1 rounded-md hover:bg-orange-500/20 transition-all font-bold disabled:opacity-50"
+                            title="Translate language name and level"
+                          >
+                            {translatingIdx === `lang-${idx}` ? (
+                              <span className="w-3 h-3 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
+                            ) : (
+                              <>
+                                <Sparkles size={11} className="animate-pulse" />
+                                {editLang === 'en' ? "Translate" : "Traduzir"}
+                              </>
+                            )}
+                          </button>
+
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              const currentLangsEn = configForm.en.languages || configForm.languages || [];
+                              const currentLangsPt = configForm.pt.languages || configForm.languages || [];
+                              const newEn = currentLangsEn.filter((_, i) => i !== idx);
+                              const newPt = currentLangsPt.filter((_, i) => i !== idx);
+                              setConfigForm({
+                                ...configForm,
+                                en: { ...configForm.en, languages: newEn },
+                                pt: { ...configForm.pt, languages: newPt }
+                              });
+                            }} 
+                            className="text-zinc-600 hover:text-red-500 p-1"
+                          >
                             <Trash2 size={14} />
                           </button>
                         </div>
                       ))}
-                      <button type="button" onClick={() => setConfigForm({ ...configForm, languages: [...configForm.languages, { name: '', level: '' }] })} className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1">
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          const currentLangsEn = configForm.en.languages || configForm.languages || [];
+                          const currentLangsPt = configForm.pt.languages || configForm.languages || [];
+                          const newLangEn = { name: '', level: '' };
+                          const newLangPt = { name: '', level: '' };
+                          setConfigForm({
+                            ...configForm,
+                            en: { ...configForm.en, languages: [...currentLangsEn, newLangEn] },
+                            pt: { ...configForm.pt, languages: [...currentLangsPt, newLangPt] }
+                          });
+                        }} 
+                        className="text-[10px] font-mono uppercase text-orange-500 hover:text-orange-400 flex items-center gap-1"
+                      >
                         <Plus size={12} /> Add Language
                       </button>
                     </div>
