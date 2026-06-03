@@ -1029,6 +1029,8 @@ export default function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [lang, setLang] = useState<'en' | 'pt'>(isPrintMode ? printLang : 'en');
   const [editLang, setEditLang] = useState<'en' | 'pt'>('en');
+  const [clientApiKey, setClientApiKey] = useState(() => localStorage.getItem('CV_GEMINI_API_KEY') || '');
+  const [showKeyConfig, setShowKeyConfig] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isViewingMessages, setIsViewingMessages] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '', honeypot: '' });
@@ -1160,21 +1162,100 @@ export default function App() {
   const [translatingIdx, setTranslatingIdx] = useState<string | null>(null);
   const [translationError, setTranslationError] = useState<string | null>(null);
 
+  const translateClientSide = async (text: string | string[], targetL: 'en' | 'pt', apiKey: string): Promise<any> => {
+    const langName = targetL === 'pt' ? 'Portuguese' : 'English';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+    if (Array.isArray(text)) {
+      const prompt = `You are a professional IT and sysadmin translator. Translate this list of bullet points or items into professional, corporate, and CV/portfolio-appropriate ${langName}. Preserve technical industry standard terms, acronyms, and proper nouns (e.g. 'Java', 'C', 'NIS2', 'DORA', 'IT', 'Intermarché'). Return a JSON array of strings containing the translations in the exact same order.
+          
+  List:
+  ${JSON.stringify(text)}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `Gemini API Error: ${response.statusText}`);
+      }
+
+      const resData = await response.json();
+      const rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+      try {
+        return JSON.parse(rawText.trim());
+      } catch (parseErr) {
+        console.error("Failed to parse JSON translation array from Gemini client side:", rawText, parseErr);
+        return text;
+      }
+    } else {
+      const prompt = `You are a professional IT and sysadmin translator. Translate the following term, phrase, or paragraph into professional and elegant ${langName}. Preserve technical terms and proper nouns. Return ONLY the translated text with no conversational markup or wrapping. If the string is empty or just whitespace, return it exactly.
+          
+  Text:
+  ${text}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `Gemini API Error: ${response.statusText}`);
+      }
+
+      const resData = await response.json();
+      const translated = resData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      return translated.trim();
+    }
+  };
+
   const translateApiCall = async (text: string | string[], targetL: 'en' | 'pt'): Promise<any> => {
     if (!text || (typeof text === 'string' && !text.trim()) || (Array.isArray(text) && text.length === 0)) {
       return text;
     }
-    const res = await fetch('/api/translate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, targetLang: targetL })
-    });
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => ({}));
-      throw new Error(errBody.error || "Translation API request failed");
+
+    const savedApiKey = localStorage.getItem('CV_GEMINI_API_KEY');
+
+    try {
+      if (savedApiKey) {
+        // Direct browser client-side translation using user's private key (ideal for GitHub Pages)
+        return await translateClientSide(text, targetL, savedApiKey);
+      }
+
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, targetLang: targetL })
+      });
+      
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error("Local Translation Server not found. Since you are running on GitHub Pages / static hosting, please configure your Gemini API Key in the 'GitHub Pages Settings' option above.");
+        }
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || "Translation API request failed");
+      }
+      const data = await res.json();
+      return data.translated;
+    } catch (e: any) {
+      console.error("Translation request failed", e);
+      if (!savedApiKey && (e.message?.includes('fetch') || e.message?.includes('NetworkError') || e.message?.includes('not found') || e.message?.includes('404') || e.message?.includes('Failed to fetch') || e.message?.includes('failed to fetch'))) {
+        throw new Error("Translation failed because the dynamic server is unavailable (or you are static-hosting on GitHub Pages). To perform automatic translation on GitHub, please toggle 'GitHub Pages Settings' at the top of this form and configure your private Gemini API Key!");
+      }
+      throw e;
     }
-    const data = await res.json();
-    return data.translated;
   };
 
   const translateSingleExperience = async (idx: number, fromLang: 'en' | 'pt', toLang: 'en' | 'pt') => {
@@ -2348,6 +2429,55 @@ export default function App() {
                 <form onSubmit={handleUpdateConfig} className="flex-1 overflow-y-auto pr-2 space-y-8 custom-scrollbar">
                   {configTab !== 'contacts' && configTab !== 'languages' && (
                     <div className="flex flex-col gap-2 flex-shrink-0">
+                      {/* GitHub Pages API Key setting */}
+                      <div className="bg-zinc-800/40 border border-white/5 p-3 rounded-xl space-y-2 text-xs">
+                        <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => setShowKeyConfig(!showKeyConfig)}>
+                          <span className="font-mono text-[10px] text-zinc-400 flex items-center gap-1.5 uppercase font-bold">
+                            <Globe size={11} className={clientApiKey ? "text-orange-500 animate-pulse" : "text-zinc-400"} />
+                            GitHub Pages Settings {clientApiKey && <span className="text-[9px] text-orange-500 bg-orange-500/15 px-1.5 py-0.5 rounded font-bold uppercase ml-1">Live client translation active</span>}
+                          </span>
+                          <span className="text-[10px] text-orange-500 font-mono flex items-center gap-1">
+                            {showKeyConfig ? "Hide" : "Show Key Setup (Optional)"}
+                          </span>
+                        </div>
+                        {showKeyConfig && (
+                          <div className="space-y-2 pt-1 border-t border-white/5 text-zinc-400">
+                            <p className="text-[11px] leading-relaxed">
+                              Since you are hosting this resume statically on GitHub Pages, the backend translation server is not active there. To enable instantaneous automated translations on your live website, enter your personal Google Gemini API Key below. It stays 100% private in your browser's local storage and is never committed to GitHub.
+                            </p>
+                            <div className="flex gap-2">
+                              <input 
+                                type="password"
+                                placeholder={clientApiKey ? "••••••••••••••••••••••••" : "Paste your Gemini API Key (e.g., AI_...) here"}
+                                value={clientApiKey}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setClientApiKey(val);
+                                  if (val.trim()) {
+                                    localStorage.setItem('CV_GEMINI_API_KEY', val.trim());
+                                  } else {
+                                    localStorage.removeItem('CV_GEMINI_API_KEY');
+                                  }
+                                }}
+                                className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-orange-500/50 text-white"
+                              />
+                              {clientApiKey && (
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    setClientApiKey('');
+                                    localStorage.removeItem('CV_GEMINI_API_KEY');
+                                  }}
+                                  className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-[10px] font-mono uppercase rounded-lg transition-colors"
+                                >
+                                  Clear
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       <div className="flex items-center justify-between p-3.5 bg-orange-500/10 border border-orange-500/20 rounded-xl text-xs">
                         <div className="flex items-center gap-2">
                           <Sparkles size={14} className="text-orange-500 animate-pulse flex-shrink-0" />
